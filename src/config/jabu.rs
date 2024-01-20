@@ -1,4 +1,9 @@
+use std::{path::PathBuf, io::ErrorKind};
+
+use ron::error::SpannedError;
 use serde::{Deserialize, Serialize};
+
+use super::java::ProjectType;
 
 /// Represents the configuration of a Java project.
 #[derive(Debug, PartialEq, Deserialize, Serialize)]
@@ -8,12 +13,33 @@ pub struct JabuConfig {
     pub fs_schema: FsSchema,
 }
 
+impl TryFrom<PathBuf> for JabuConfig {
+    type Error = std::io::Error;
+    fn try_from(value: PathBuf) -> Result<Self, Self::Error> {
+        let file_contents = std::fs::read_to_string(value)?;
+
+        match Self::try_from(file_contents.as_str()) {
+            Ok(jabu_config) => Ok(jabu_config),
+            Err(e) => {
+                Err(std::io::Error::new(ErrorKind::Other, stringify!(e)))
+            }
+        }
+    }
+}
+
+impl TryFrom<&str> for JabuConfig {
+    type Error = SpannedError;
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        ron::from_str(value)
+    }
+}
+
 impl JabuConfig {
-    pub fn default_of_name(proj_name: &str) -> Self {
+    pub fn default_of_name(proj_name: &str, project_type: ProjectType) -> Self {
         Self {
             header: ConfigHeader::of_proj_name(proj_name),
             java_config: JavaConfig::default(),
-            fs_schema: FsSchema::default(),
+            fs_schema: FsSchema::new(project_type),
         }
     }
 }
@@ -72,15 +98,39 @@ pub struct FsSchema {
     pub target: String,
     pub resources: String,
     pub test: String,
+    pub other: Vec<String>
 }
 
-impl Default for FsSchema {
-    fn default() -> Self { 
+impl FsSchema {
+    pub fn new(project_type: ProjectType) -> Self {
         Self {
             source: "./src/main".to_string(),
             target: "./target".to_string(),
             resources: "./src/resources".to_string(),
             test: "./src/test".to_string(),
+            other: Vec::new()
         }
+    }
+}
+
+impl FsSchema {
+    pub fn check_integrity(&self, directory: &str) -> Result<(), Vec<String>> {
+
+        Ok(())
+    }
+
+    pub fn create(&self, base_directory: &str) -> std::io::Result<()> {
+        let mut dirs = Vec::with_capacity(5);
+        dirs.push(&self.source);
+        dirs.push(&self.target);
+        dirs.push(&self.resources);
+        dirs.push(&self.test);
+        dirs.extend(&self.other);
+
+        for dir in dirs {
+            std::fs::create_dir_all(dir)?;
+        }
+
+        Ok(())
     }
 }

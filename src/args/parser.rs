@@ -1,5 +1,8 @@
 use crate::args::options::*;
-use std::collections::{HashMap, HashSet};
+use std::{
+    collections::{HashMap, HashSet},
+    error::Error,
+};
 
 pub type ArgParsingResult<R> = Result<R, HashSet<InvalidArgError>>;
 
@@ -7,8 +10,21 @@ pub type ArgParsingResult<R> = Result<R, HashSet<InvalidArgError>>;
 pub enum InvalidArgError {
     MissingOption(String),
     MissingOptionArgument(String),
+
+    /// Given when an option contains an invalid value, i.e., the 
+    /// option was supposed to contain an integer, instead it had a 
+    /// character.
+    InvalidOptionValue{option_name: String, error_msg: String},
     UnrecognizedOption(String),
 }
+
+impl std::fmt::Display for InvalidArgError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+impl Error for InvalidArgError {}
 
 #[derive(Debug, PartialEq)]
 pub struct ParsedArguments {
@@ -53,7 +69,7 @@ impl From<Vec<String>> for ParsedArguments {
 
 impl ParsedArguments {
     pub fn new_with_options(args: Vec<String>, options: &Options) -> ArgParsingResult<Self> {
-        let parsed_args = Self::from(args);
+        let mut parsed_args = Self::from(args);
         match parsed_args.validate(options) {
             Ok(_) => Ok(parsed_args),
             Err(errors) => Err(errors),
@@ -70,8 +86,15 @@ impl ParsedArguments {
     /// Checks that all the rules stablished by the <code>options</code> argument
     /// apply. If all of them are applied, `Ok(())` gets returned, otherwise,
     /// a `Vec<InvalidArgError>` gets returned, containing all the errors.
-    pub fn validate(&self, options: &Options) -> ArgParsingResult<()> {
+    pub fn validate(&mut self, options: &Options) -> ArgParsingResult<()> {
         let mut errors: HashSet<InvalidArgError>;
+
+        // Insert the default values
+        options.options.iter()
+            .filter(|o| o.default_value.is_some())
+            .for_each(|defaulted_option| {
+                self.options.entry(defaulted_option.name.clone()).or_insert(defaulted_option.default_value.clone());
+            });
 
         errors = options
             .options
@@ -102,9 +125,12 @@ impl ParsedArguments {
 
         // Check for extra options in `options`
         errors.extend(
-            self.options.iter()
+            self.options
+                .iter()
                 .filter(|(option_name, _)| !options.has_option_with_name(option_name))
-                .map(|(extra_option_name, _)| InvalidArgError::UnrecognizedOption(extra_option_name.to_string()))
+                .map(|(extra_option_name, _)| {
+                    InvalidArgError::UnrecognizedOption(extra_option_name.to_string())
+                }),
         );
 
         if errors.is_empty() {

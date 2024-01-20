@@ -37,11 +37,12 @@ impl Options {
 }
 
 pub struct ParOptionBuilder {
-    pub name: Option<String>,
-    pub short: Option<char>,
-    pub description: Option<String>,
-    pub has_arg: bool,
-    pub required: bool,
+    name: Option<String>,
+    short: Option<char>,
+    description: Option<String>,
+    has_arg: bool,
+    required: bool,
+    default_value: Option<String>,
 }
 
 impl Default for ParOptionBuilder {
@@ -52,6 +53,7 @@ impl Default for ParOptionBuilder {
             description: None,
             has_arg: false,
             required: false,
+            default_value: None
         }
     }
 }
@@ -72,13 +74,33 @@ impl ParOptionBuilder {
         self
     }
 
+    /// Marks the option as required (*meaning that if the option
+    /// doesn't appear in the arguments when parsing, this will fail*)
+    /// NOTE: *If `required` is set to `true`, and the default value has 
+    /// been set to something, this will automatically be set to `None`*.
     pub fn required(mut self, required: bool) -> Self {
+        if required && self.default_value.is_some() {
+            self.default_value = None;
+        }
+
         self.required = required;
         self
     }
 
     pub fn has_arg(mut self, has_arg: bool) -> Self {
         self.has_arg = has_arg;
+        self
+    }
+
+    /// Defines the default value that the option will get in case
+    /// that it doesn't get specified in the arguments.
+    /// NOTE: *If `required` is set to `true`, this attribute will 
+    /// automatically be turned into `false`*
+    pub fn default_value(mut self, default_value: String) -> Self {
+        if self.required {
+            self.required = false
+        }
+        self.default_value = Some(default_value);
         self
     }
 
@@ -89,6 +111,7 @@ impl ParOptionBuilder {
             short: self.short.unwrap_or_default(),
             has_arg: self.has_arg,
             required: self.required,
+            default_value: self.default_value
         }
     }
 }
@@ -99,6 +122,7 @@ pub struct ParOption {
     pub description: Option<String>,
     pub has_arg: bool,
     pub required: bool,
+    pub default_value: Option<String>
 }
 
 impl ParOption {
@@ -111,8 +135,14 @@ impl ParOption {
             has_arg,
             description: description.map_or_else(|| None, |desc| Some(desc.to_string())),
             short: name.chars().next().unwrap(),
+            default_value: None,
             required,
         }
+    }
+
+    /// Returns a default instance of `ParOptionBuilder`
+    pub fn builder() -> ParOptionBuilder {
+        ParOptionBuilder::default()
     }
 }
 

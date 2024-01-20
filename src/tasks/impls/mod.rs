@@ -1,5 +1,5 @@
 mod run;
 mod new;
 
-use run::*;
-use new::*;
+pub use run::*;
+pub use new::*;

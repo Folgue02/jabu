@@ -1,5 +1,5 @@
 use crate::args::parser::{ParsedArguments, InvalidArgError};
-use crate::args::options::{Options, ParOptionBuilder};
+use crate::args::options::{Options, ParOptionBuilder, ParOption};
 use std::collections::{HashMap, HashSet};
 
 #[test]
@@ -115,5 +115,24 @@ fn parse_extra_args() {
             expected.insert(InvalidArgError::UnrecognizedOption("unnecessary".to_string()));
             assert_eq!(expected, e)
         }
+    }
+}
+
+#[test]
+fn test_default_values() {
+    let mut options = Options::default();
+    options.add_option(
+        ParOption::builder()
+            .name("unnecessary")
+            .required(true) // Should be set to false
+            .default_value("value!".to_string())
+            .build()
+    );
+    let args = vec![];
+
+    let parsed_args = ParsedArguments::new_with_options(args, &options);
+    match parsed_args {
+        Ok(_) => (),
+        Err(e) => assert!(false, stringify!(e))
     }
 }
