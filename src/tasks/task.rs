@@ -72,12 +72,26 @@ impl TaskManager {
         }
     }
 
-    fn contains_task_with_name(&self, task_name: &str) -> bool {
+    pub fn contains_task_with_name(&self, task_name: &str) -> bool {
         self.tasks.iter()
             .any(|(t_name, _)| task_name == t_name)
     }
 
     pub fn remove(&mut self, task_name: &str) -> Option<Box<dyn Task>> {
         self.tasks.remove(task_name)
+    }
+
+    pub fn get_task(&self, task_name: &str) -> Option<&Box<dyn Task>> {
+        self.tasks.get(task_name)
+    }
+
+    pub fn execute(&self, task_name: &str, args: Vec<String>, directory: &str) -> TaskResult {
+        let task = if let Some(task) = self.get_task(task_name) {
+            task
+        } else {
+            return Err(TaskError::NoSuchTask(task_name.to_string()));
+        };
+
+        task.execute(args)
     }
 }

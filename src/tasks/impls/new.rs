@@ -1,5 +1,12 @@
-use std::{path::Path, collections::HashSet};
-use crate::{tasks::*, args::{options::{Options, ParOption, ParOptionBuilder}, parser::{ParsedArguments, InvalidArgError}}, config::{JabuConfig, java::ProjectType}};
+use crate::{
+    args::{
+        options::{Options, ParOption, ParOptionBuilder},
+        parser::{InvalidArgError, ParsedArguments},
+    },
+    config::{java::ProjectType, JabuConfig, JABU_FILE_NAME},
+    tasks::*,
+};
+use std::{collections::HashSet, path::Path};
 
 #[derive(Debug)]
 pub struct NewProjectTask {}
@@ -13,7 +20,7 @@ impl NewProjectTask {
                 .short('n')
                 .description("Name of the new project.")
                 .required(true)
-                .build()
+                .build(),
         );
 
         options.add_option(
@@ -22,7 +29,7 @@ impl NewProjectTask {
                 .short('t')
                 .description("Defines the type of project to be created.")
                 .default_value("binary".to_string())
-                .build()
+                .build(),
         );
 
         options
@@ -35,46 +42,65 @@ impl Task for NewProjectTask {
     }
 
     fn execute(&self, args: Vec<String>) -> TaskResult {
-        let parsed_args = match ParsedArguments::new_with_options(args, &NewProjectTask::get_options()) {
-            Ok(p_args) => p_args,
-            Err(e) => return Err(TaskError::InvalidArguments(e))
-        };
+        let parsed_args =
+            match ParsedArguments::new_with_options(args, &NewProjectTask::get_options()) {
+                Ok(p_args) => p_args,
+                Err(e) => return Err(TaskError::InvalidArguments(e)),
+            };
 
-        // Safely unwrap since if this options were missing it would have been caught 
+        // Safely unwrap since if this options were missing it would have been caught
         // while parsing with the options.
-        let new_project_name = parsed_args.get_option_value("name").unwrap().as_ref().unwrap().as_str();
-        let new_project_path = Path::new(
-            std::env::current_dir().unwrap().as_os_str()
-        ).join(new_project_name);
-        let project_type = match ProjectType::try_from(parsed_args.get_option_value("project-type").unwrap().as_ref().unwrap().as_str()) {
+        let new_project_name = parsed_args
+            .get_option_value("name")
+            .unwrap()
+            .as_ref()
+            .unwrap()
+            .as_str();
+        let new_project_path =
+            Path::new(std::env::current_dir().unwrap().as_os_str()).join(new_project_name);
+        let project_type = match ProjectType::try_from(
+            parsed_args
+                .get_option_value("project-type")
+                .unwrap()
+                .as_ref()
+                .unwrap()
+                .as_str(),
+        ) {
             Ok(project_type) => project_type,
             Err(_) => {
                 let mut errors = HashSet::new();
-                errors.insert(InvalidArgError::InvalidOptionValue{
+                errors.insert(InvalidArgError::InvalidOptionValue {
                     option_name: "project-type".to_owned(),
-                    error_msg: "Invalid type given.".to_string()
+                    error_msg: "Invalid type given.".to_string(),
                 });
-                return Err(TaskError::InvalidArguments(errors))
+                return Err(TaskError::InvalidArguments(errors));
             }
         };
 
-        match std::fs::create_dir(new_project_path) {
+        match std::fs::create_dir(new_project_path.clone()) {
             Err(e) => return Err(TaskError::IOError(e)),
-            _ => ()
+            _ => (),
         }
 
         let project_config = JabuConfig::default_of_name(new_project_name, project_type);
 
-        let project_creation_result = project_config.fs_schema.create(
-            std::env::current_dir().unwrap().as_os_str().to_str().unwrap()
-        );
-
+        // Create the directories for the project
+        let project_creation_result = project_config.fs_schema.create(&new_project_path.clone().to_string_lossy().to_string());
         match project_creation_result {
+            Ok(_) => {
+                ()
+            }
+            Err(e) => return Err(TaskError::IOError(e)),
+        }
+
+        // Write the project's config into a jabu file.
+        let jabu_file_path = new_project_path.join(JABU_FILE_NAME).to_string_lossy().to_string();
+        match std::fs::write(jabu_file_path, ron::ser::to_string_pretty(&project_config, ron::ser::PrettyConfig::default()).unwrap()) {
             Ok(_) => {
                 println!("Project created.");
                 Ok(())
             }
-            Err(e) => Err(TaskError::IOError(e))
+            Err(e) => Err(TaskError::IOError(e)),
         }
     }
 }

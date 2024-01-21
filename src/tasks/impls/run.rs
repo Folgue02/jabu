@@ -5,6 +5,12 @@ use crate::config::JabuConfig;
 pub struct Run {
 }
 
+impl Default for Run {
+    fn default() -> Self {
+        Self {}
+    }
+}
+
 impl JabuTask for Run {
     fn description(&self) -> String {
         "Runs the current project".to_string()

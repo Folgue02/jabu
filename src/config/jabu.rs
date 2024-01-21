@@ -1,9 +1,11 @@
-use std::{path::PathBuf, io::ErrorKind};
+use std::{path::{PathBuf, Path}, io::ErrorKind};
 
 use ron::error::SpannedError;
 use serde::{Deserialize, Serialize};
 
 use super::java::ProjectType;
+
+pub const JABU_FILE_NAME: &'static str = "jabu.ron";
 
 /// Represents the configuration of a Java project.
 #[derive(Debug, PartialEq, Deserialize, Serialize)]
@@ -115,8 +117,7 @@ impl FsSchema {
 
 impl FsSchema {
     pub fn check_integrity(&self, directory: &str) -> Result<(), Vec<String>> {
-
-        Ok(())
+        todo!("Not implemented yet :/")    
     }
 
     pub fn create(&self, base_directory: &str) -> std::io::Result<()> {
@@ -128,7 +129,8 @@ impl FsSchema {
         dirs.extend(&self.other);
 
         for dir in dirs {
-            std::fs::create_dir_all(dir)?;
+            let joined_dirs = Path::new(base_directory).join(dir).to_string_lossy().to_string();
+            std::fs::create_dir_all(joined_dirs)?;
         }
 
         Ok(())

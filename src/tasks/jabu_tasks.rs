@@ -1,7 +1,7 @@
-use crate::config::JabuConfig;
+use crate::config::{JabuConfig, JABU_FILE_NAME};
 use std::{collections::HashMap, path::{Path, PathBuf}, error::Error};
 
-use super::{TaskError, TaskResult};
+use super::{TaskError, TaskResult, impls::{Run, DisplayJabuTask}};
 
 /// Represents a task that it's supposed to be executed inside of a Jabu project.
 pub trait JabuTask {
@@ -13,6 +13,17 @@ pub trait JabuTask {
 
 pub struct JabuTaskManager {
 	tasks: HashMap<String, Box<dyn JabuTask>>
+}
+
+impl Default for JabuTaskManager {
+    fn default() -> Self {
+        let mut tasks: HashMap<String, Box<dyn JabuTask>> = HashMap::new();
+        tasks.insert("run".to_string(), Box::new(Run::default()));
+        tasks.insert("info".to_string(), Box::new(DisplayJabuTask::default()));
+        Self {
+            tasks
+        }
+    }
 }
 
 impl JabuTaskManager {
@@ -45,7 +56,7 @@ impl JabuTaskManager {
     		return Err(TaskError::NoSuchTask(task_name.to_string()));
     	};
 
-        let jabu_config = match JabuConfig::try_from(PathBuf::from(directory)) {
+        let jabu_config = match JabuConfig::try_from(PathBuf::from(directory).join(JABU_FILE_NAME)) {
             Ok(cfg) => cfg,
             Err(e) => return Err(TaskError::IOError(e))
         };
