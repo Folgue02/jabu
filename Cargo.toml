@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 ron = "0.8"
 serde = { version = "1", features = ["derive"] }
+walkdir = "2.4.0"

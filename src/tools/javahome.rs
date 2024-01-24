@@ -12,7 +12,8 @@ impl TryFrom<PathBuf> for JavaHome {
     fn try_from(home: PathBuf) -> Result<Self, Self::Error> {
         // TODO: Remove code repetition in this function
 
-        let java_path = home.join("java");
+        let java_path_bin = PathBuf::from(&home).join("bin");
+        let java_path = java_path_bin.join("java");
         let java = match std::fs::metadata(&java_path) {
             Ok(f) => {
                 if f.is_file() {
@@ -24,7 +25,7 @@ impl TryFrom<PathBuf> for JavaHome {
             Err(_) => None
         };
 
-        let jar_path = home.join("jar");
+        let jar_path = java_path_bin.join("jar");
         let jar = match std::fs::metadata(&jar_path) {
             Ok(f) => {
                 if f.is_file() {
@@ -36,7 +37,7 @@ impl TryFrom<PathBuf> for JavaHome {
             Err(_) => None
         };
 
-        let javac_path = home.join("javac");
+        let javac_path = java_path_bin.join("javac");
         let javac = match std::fs::metadata(&javac_path) {
             Ok(f) => {
                 if f.is_file() {
@@ -84,5 +85,9 @@ impl JavaHome {
         self.java.is_some()
             && self.javac.is_some()
             && self.jar.is_some()
+    }
+
+    pub fn get_java_home(&self) -> &PathBuf {
+        &self.java_home
     }
 }

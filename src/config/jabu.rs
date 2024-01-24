@@ -69,7 +69,7 @@ impl ConfigHeader {
 
 /// Configuration about the jdk to be used on the 
 /// project.
-#[derive(Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, PartialEq, Deserialize, Serialize, Clone)]
 pub struct JavaConfig {
     /// Minimum version of the jdk to be used
     /// while working on the project.

@@ -1,5 +1,6 @@
 use crate::tasks::{Task, JabuTask};
 use crate::config::JabuConfig;
+use crate::tools::JavaHome;
 
 #[derive(Debug)]
 pub struct Run {
@@ -16,7 +17,7 @@ impl JabuTask for Run {
         "Runs the current project".to_string()
     }
 
-    fn execute(&self, args: Vec<String>, jabu_config: &JabuConfig) -> crate::tasks::TaskResult {
+    fn execute(&self, args: Vec<String>, jabu_config: &JabuConfig, java_home: &JavaHome) -> crate::tasks::TaskResult {
         println!("Run task");
         Ok(())
     }

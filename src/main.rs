@@ -5,6 +5,8 @@ use tasks::{TaskManager, JabuTaskManager, TaskError};
 mod config;
 mod tasks;
 mod args;
+mod tools;
+mod utils;
 
 #[cfg(test)]
 mod tests;

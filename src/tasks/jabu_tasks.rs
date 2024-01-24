@@ -1,14 +1,14 @@
-use crate::config::{JabuConfig, JABU_FILE_NAME};
+use crate::{config::{JabuConfig, JABU_FILE_NAME}, tools::JavaHome};
 use std::{collections::HashMap, path::{Path, PathBuf}, error::Error};
 
-use super::{TaskError, TaskResult, impls::{Run, DisplayJabuTask}};
+use super::{TaskError, TaskResult, impls::{Run, DisplayJabuTask, BuildJabuTask}};
 
 /// Represents a task that it's supposed to be executed inside of a Jabu project.
 pub trait JabuTask {
     /// Description of the task.
 	fn description(&self) -> String;
     /// Executes the task with the given arguments and jabu config.
-	fn execute(&self, args: Vec<String>, jabu_config: &JabuConfig) -> TaskResult;
+	fn execute(&self, args: Vec<String>, jabu_config: &JabuConfig, java_home: &JavaHome) -> TaskResult;
 }
 
 pub struct JabuTaskManager {
@@ -19,6 +19,7 @@ impl Default for JabuTaskManager {
     fn default() -> Self {
         let mut tasks: HashMap<String, Box<dyn JabuTask>> = HashMap::new();
         tasks.insert("run".to_string(), Box::new(Run::default()));
+        tasks.insert("build".to_string(), Box::new(BuildJabuTask::default()));
         tasks.insert("info".to_string(), Box::new(DisplayJabuTask::default()));
         Self {
             tasks
@@ -61,6 +62,20 @@ impl JabuTaskManager {
             Err(e) => return Err(TaskError::IOError(e))
         };
 
-    	task.execute(args, &jabu_config)
+        let java_home = match JavaHome::new() {
+            Ok(java_home) => java_home,
+            Err(e) => {
+                eprintln!("Couldn't find a java installation path (it can be specified with the $JAVA_HOME variable)");
+                return Err(TaskError::IOError(e))
+            }
+        };
+
+        if !java_home.is_valid() {
+            return Err(TaskError::Generic("The java environment found doesn't seem to be valid (doesn't contain all necessary tools)".to_string()));
+        }
+
+        println!("Java installation detected: {:?}", java_home.get_java_home());
+
+    	task.execute(args, &jabu_config, &java_home)
     }
 }
