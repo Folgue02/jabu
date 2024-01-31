@@ -7,6 +7,7 @@ pub struct JavacConfig {
     sources: Vec<String>,
     output_dir: Option<String>,
     java_config: Option<JavaConfig>,
+    pub classpath: Vec<String>
 }
 
 impl Into<Vec<String>> for JavacConfig {
@@ -26,6 +27,16 @@ impl Into<Vec<String>> for JavacConfig {
             result_args.push(output_dir);
         }
 
+        if !self.classpath.is_empty() {
+            result_args.push("-cp".to_string());
+            let delimiter = if cfg!(windows) {
+                ";"
+            } else {
+                ":"
+            };
+            result_args.push(self.classpath.join(delimiter));
+        }
+
         result_args
     }
 }
@@ -35,7 +46,8 @@ impl JavacConfig {
         Self {
             sources,
             output_dir: None,
-            java_config: None
+            java_config: None,
+            classpath: Vec::new()
         }
     }
 
@@ -43,11 +55,20 @@ impl JavacConfig {
         Self {
             sources,
             output_dir,
-            java_config
+            java_config,
+            classpath: Vec::new()
         }
     }
 
     pub fn into_args(self) -> Vec<String> {
         self.into()
+    }
+
+    pub fn set_classpath(&mut self, new_classpath: Vec<String>) {
+        self.classpath = new_classpath;
+    }
+
+    pub fn add_classpath(&mut self, cp: String) {
+        self.classpath.push(cp);
     }
 }

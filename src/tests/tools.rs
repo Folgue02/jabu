@@ -29,4 +29,27 @@ mod javac {
 
         assert_eq!(expected, JavacConfig::from_sources(sources).into_args())
     }
+
+    #[test]
+    fn test_with_classpath() {
+        let expected = vec![
+            "src/App.java", "src/tools/Java.java",
+            "--source", "17", "--target", "17",
+            "-d", "target", 
+            "-cp", "lib/file.jar"
+        ];
+        let classpath = vec![
+            "lib/file.jar".to_string(),
+            "../project/src/".to_string()
+        ];
+
+        let javac_config = JavacConfig::new(
+            vec![
+                "src/App.java".to_string(),
+                "src/tools/Java.java".to_string()
+            ],
+            Some("target".to_string()),
+            Some(JavaConfig::default())
+        );
+    }
 }
