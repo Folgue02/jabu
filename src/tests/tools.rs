@@ -53,3 +53,73 @@ mod javac {
         );
     }
 }
+
+mod java {
+    use crate::tools::*;
+    #[test]
+    fn java_only_class() {
+        let main_class = String::from("me.user.app.App");
+        let expected = vec![
+            "me.user.app.App"
+        ];
+        let java_tool = JavaToolConfig::new(JavaExecTarget::MainClass(main_class), Vec::new(), Vec::new());
+        assert_eq!(expected, java_tool.into_args());
+    }
+
+    #[test]
+    fn java_only_jar() {
+        let jar_name = String::from("./file.jar");
+        let expected = vec![
+            "-jar", "./file.jar"
+        ];
+        let java_tool = JavaToolConfig::new(JavaExecTarget::Jar(jar_name), Vec::new(), Vec::new());
+        assert_eq!(expected, java_tool.into_args());
+    }
+
+    #[test]
+    fn java_jar_with_classpath() {
+        let expected = vec![
+            "-cp", "./lib/dependency.jar:./lib/other_dependency.jar",
+            "-jar", "./file.jar"
+        ];
+        let classpath = vec![
+            "./lib/dependency.jar".to_string(),
+            "./lib/other_dependency.jar".to_string()
+        ];
+        let java_tool = JavaToolConfig::new(JavaExecTarget::Jar("./file.jar".to_string()), classpath, Vec::new());
+        assert_eq!(expected, java_tool.into_args());
+    }
+
+    #[test]
+    fn java_class_with_classpath() {
+        let expected = vec![
+            "-cp", "./lib/dependency.jar:./lib/other_dependency.jar",
+            "me.user.app.App"
+        ];
+        let classpath = vec![
+            "./lib/dependency.jar".to_string(),
+            "./lib/other_dependency.jar".to_string()
+        ];
+        let java_tool = JavaToolConfig::new(JavaExecTarget::MainClass("me.user.app.App".to_string()), classpath, Vec::new());
+        assert_eq!(expected, java_tool.into_args());
+    }
+
+    #[test]
+    fn java_class_with_arguments_and_classpath() {
+        let expected = vec![
+            "-cp", "./lib/dependency.jar:./lib/other_dependency.jar",
+            "me.user.app.App", "--first-argument", "--second-argument", "third argument"
+        ];
+        let classpath = vec![
+            "./lib/dependency.jar".to_string(),
+            "./lib/other_dependency.jar".to_string()
+        ];
+        let arguments = vec![
+            "--first-argument".to_string(),
+            "--second-argument".to_string(),
+            "third argument".to_string()
+        ];
+        let java_tool = JavaToolConfig::new(JavaExecTarget::MainClass("me.user.app.App".to_string()), classpath, arguments);
+        assert_eq!(expected, java_tool.into_args());
+    }
+}
