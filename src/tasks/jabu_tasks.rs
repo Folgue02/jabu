@@ -9,10 +9,33 @@ pub trait JabuTask {
 	fn description(&self) -> String;
     /// Executes the task with the given arguments and jabu config.
 	fn execute(&self, args: Vec<String>, jabu_config: &JabuConfig, java_home: &JavaHome) -> TaskResult;
+    fn get_dependency_task_specs(&self) -> JabuTaskDependencySpec {
+        JabuTaskDependencySpec::default()
+    }
+}
+
+pub struct JabuTaskDependencySpec {
+    specs: HashMap<String, Vec<String>>
+}
+
+impl Default for JabuTaskDependencySpec {
+    fn default() -> Self {
+        Self {
+            specs: HashMap::new()
+        }
+    }
+}
+
+impl JabuTaskDependencySpec {
+    pub fn new(specs: HashMap<String, Vec<String>>) -> Self {
+        Self {
+            specs
+        }
+    }
 }
 
 pub struct JabuTaskManager {
-	tasks: HashMap<String, Box<dyn JabuTask>>
+    tasks: HashMap<String, Box<dyn JabuTask>>
 }
 
 impl Default for JabuTaskManager {
@@ -75,6 +98,20 @@ impl JabuTaskManager {
         }
 
         println!("Java installation detected: {:?}", java_home.get_java_home());
+
+        for (task_name, task_args) in task.get_dependency_task_specs().specs {
+            println!("=> Executing dependency task '{task_name}' with args '{task_args:?}'");
+            if let Some(dep_task) = self.get_task(&task_name) {
+                match dep_task.execute(task_args, &jabu_config, &java_home) {
+                    Ok(_) => (),
+                    Err(e) => {
+                        return Err(TaskError::DependencyTaskFailed { task_name: task_name.clone(), description: e.to_string() })
+                    }
+                }
+            } else {
+                return Err(TaskError::DependencyTaskDoesntExist(task_name.clone()));
+            }
+        }
 
     	task.execute(args, &jabu_config, &java_home)
     }

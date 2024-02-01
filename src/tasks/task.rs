@@ -24,6 +24,13 @@ pub enum TaskError {
     /// Invalid arguments have been supplied.
     InvalidArguments(HashSet<InvalidArgError>),
 
+    /// A task has specified a non existent task as 
+    /// dependency.
+    DependencyTaskDoesntExist(String),
+
+    /// A dependency task specified by another task has failed.
+    DependencyTaskFailed{ task_name: String, description: String},
+
     /// Generic error with a message attached to it.
     Generic(String),
 }

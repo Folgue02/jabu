@@ -2,6 +2,7 @@ use std::{path::{PathBuf, Path}, io::ErrorKind};
 
 use ron::error::SpannedError;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 use super::java::ProjectType;
 
@@ -13,6 +14,7 @@ pub struct JabuConfig {
     pub header: ConfigHeader,
     pub java_config: JavaConfig,
     pub fs_schema: FsSchema,
+    pub properties: HashMap<String, String>,
 }
 
 impl TryFrom<PathBuf> for JabuConfig {
@@ -42,6 +44,7 @@ impl JabuConfig {
             header: ConfigHeader::of_proj_name(proj_name),
             java_config: JavaConfig::default(),
             fs_schema: FsSchema::new(project_type),
+            properties: HashMap::new()
         }
     }
 }
