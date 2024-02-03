@@ -11,14 +11,14 @@ mod utils;
 #[cfg(test)]
 mod tests;
 
+pub const VERSION: &'static str = "0.0.2";
+
 fn main() {
     let mut args = std::env::args();
-    let cwd = if let Ok(cwd) = std::env::current_dir() {
-        cwd.to_string_lossy().to_string()
-    } else {
-        eprintln!("Couldn't get the current working directory.");
-        exit(1)
-    };
+    let cwd = std::env::current_dir().expect("Couldn't get the current working directory")
+        .to_string_lossy()
+        .to_string();
+
     args.next();
     let result = match args.next() {
         Some(task_name) => {

@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 use crate::args::parser::InvalidArgError;
-use crate::tasks::impls::NewProjectTask;
+use crate::tasks::impls::{VersionTask, NewProjectTask};
 
 pub type TaskResult = Result<(), TaskError>;
 
@@ -63,6 +63,7 @@ impl Default for TaskManager {
     fn default() -> Self {
         let mut tasks: HashMap<String, Box<dyn Task>> = HashMap::new();
         tasks.insert("new".to_string(), Box::new(NewProjectTask {}));
+        tasks.insert("version".to_string(), Box::new(VersionTask::default()));
         Self {
             tasks
         }
