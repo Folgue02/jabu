@@ -1,6 +1,7 @@
 use std::process::exit;
 
 use tasks::{TaskManager, JabuTaskManager, TaskError};
+use chrono;
 
 mod config;
 mod tasks;
@@ -14,6 +15,7 @@ mod tests;
 pub const VERSION: &'static str = "0.0.2";
 
 fn main() {
+    let start_timestamp;
     let mut args = std::env::args();
     let cwd = std::env::current_dir().expect("Couldn't get the current working directory")
         .to_string_lossy()
@@ -22,6 +24,8 @@ fn main() {
     args.next();
     let result = match args.next() {
         Some(task_name) => {
+            start_timestamp = chrono::offset::Local::now();
+            println!("======> Started jabu at {start_timestamp}");
             let task_manager = TaskManager::default();
             let jabu_task_manager = JabuTaskManager::default();
 
@@ -39,10 +43,13 @@ fn main() {
         }
     };
 
+    let end_timestamp = chrono::offset::Local::now();
     match result {
-        Ok(_) => println!("Done."),
+        Ok(_) => {
+            println!("======> Done. ({end_timestamp})");
+        }
         Err(e) => {
-            eprintln!("Soemthing went wrong: {e}");
+            eprintln!("Something went wrong: {e}");
             exit(1)
         }
     }
