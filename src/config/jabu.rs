@@ -102,6 +102,7 @@ pub struct FsSchema {
     pub source: String,
     pub target: String,
     pub resources: String,
+    pub scripts: String,
     pub test: String,
     pub other: Vec<String>
 }
@@ -112,6 +113,7 @@ impl FsSchema {
             source: "./src/main".to_string(),
             target: "./target".to_string(),
             resources: "./src/resources".to_string(),
+            scripts: "./scripts/".to_string(),
             test: "./src/test".to_string(),
             other: Vec::new()
         }
