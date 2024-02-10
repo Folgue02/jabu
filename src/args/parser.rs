@@ -7,20 +7,44 @@ use std::{
 pub type ArgParsingResult<R> = Result<R, HashSet<InvalidArgError>>;
 
 #[derive(PartialEq, Debug, Eq, Hash)]
+/// Represents errors that might occur while parsing a list of arguments
+/// and comparing it to an `Options` object.
 pub enum InvalidArgError {
+    /// A required option wasn't specified by the user.
     MissingOption(String),
+
+    /// The option was specified, but no argument value was given. The
+    /// String in the tuple contains the name of the option.
     MissingOptionArgument(String),
 
     /// Given when an option contains an invalid value, i.e., the 
     /// option was supposed to contain an integer, instead it had a 
     /// character.
     InvalidOptionValue{option_name: String, error_msg: String},
+
+    /// An non recognized option was specified in the arguments by 
+    /// the user. The string of the tuple represents the name of that
+    /// unrecognized option.
     UnrecognizedOption(String),
 }
 
 impl std::fmt::Display for InvalidArgError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
+        let msg = match self {
+            Self::MissingOption(option_name) => {
+                format!("Option '{option_name}' not specified.")
+            }
+            Self::MissingOptionArgument(option_name) => {
+                format!("Option '{option_name}' specified, but no argument value was specified with it (it's required)")
+            }
+            Self::InvalidOptionValue{ option_name, error_msg } => {
+                format!("The value specified for option '{option_name}' was not valid: {error_msg}")
+            }
+            Self::UnrecognizedOption(unrecognized_option) => {
+                format!("Unrecognized option '{unrecognized_option}'")
+            }
+        };
+        write!(f, "{}", msg)
     }
 }
 

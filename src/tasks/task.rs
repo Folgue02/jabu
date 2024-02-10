@@ -8,7 +8,7 @@ pub type TaskResult = Result<(), TaskError>;
 #[derive(Debug)]
 pub enum TaskError {
     /// Signifies the failure of the execution of an external command.
-    CommandFailed(String, String),
+    CommandFailed{command: String, description: String},
 
     /// Invalid configuration, this can mean that the configuration of the
     /// projet was wrong.
@@ -37,8 +37,38 @@ pub enum TaskError {
 
 impl std::fmt::Display for TaskError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let msg = match self {
+            Self::Generic(desc) => format!("Something went wrong: {desc}"),
+            Self::IOError(io_error) => format!("An IO error has occurred: {io_error}"),
+            Self::DependencyTaskFailed { task_name, description } => {
+                format!("While executing a task there was an error executing its dependency task '{task_name}': {description}")
+            }
+            Self::DependencyTaskDoesntExist(dependency_task) => {
+                format!("A task called a dependency task '{dependency_task}' which doesn't exist.")
+            }
+            Self::InvalidConfig(possible_description) => {
+                if let Some(description) = possible_description {
+                    format!("The project's jabu configuration is invalid: {description}")
+                } else {
+                    format!("The project's jabu configuration is invalid.")
+                }
+            }
+            Self::NoSuchTask(task_name) => format!("Task with name '{task_name}' doesn't exist."),
+            Self::CommandFailed {command, description} => {
+                format!("Command '{command}' due to the following error/error code: {description}")
+            }
+            Self::InvalidArguments(errors) => {
+                let error_list_compiled = errors.iter()
+                    .enumerate()
+                    .map(|(index, err)| {
+                        format!("{} : {err}", index + 1)
+                    }).collect::<Vec<String>>()
+                .join("\n");
+                format!("Invalid arguments:\n{error_list_compiled}")
+            }
+        };
         // TODO: Write specified messages.
-        write!(f, "{:?}", self)
+        write!(f, "{msg}")
     }
 }
 

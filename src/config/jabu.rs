@@ -131,6 +131,7 @@ impl FsSchema {
         dirs.push(&self.target);
         dirs.push(&self.resources);
         dirs.push(&self.test);
+        dirs.push(&self.scripts);
         dirs.extend(&self.other);
 
         for dir in dirs {

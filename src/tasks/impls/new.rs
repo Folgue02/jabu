@@ -20,6 +20,7 @@ impl NewProjectTask {
                 .short('n')
                 .description("Name of the new project.")
                 .required(true)
+                .has_arg(true)
                 .build(),
         );
 
@@ -27,6 +28,7 @@ impl NewProjectTask {
             ParOptionBuilder::default()
                 .name("project-type")
                 .short('t')
+                .has_arg(true)
                 .description("Defines the type of project to be created.")
                 .default_value("binary".to_string())
                 .build(),

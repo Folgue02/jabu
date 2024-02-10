@@ -36,7 +36,7 @@ impl JabuTask for BuildJabuTask {
         sources
             .iter()
             .enumerate()
-            .for_each(|(index, source)| println!("{index}: {source}"));
+            .for_each(|(index, source)| println!("{}: {source}", index + 1));
         println!("");
 
         let javac_args: Vec<String> = JavacConfig::new(
@@ -53,16 +53,25 @@ impl JabuTask for BuildJabuTask {
                 if let Some(code) = exit_status.code() {
                     code
                 } else {
-                    return Err(crate::tasks::TaskError::CommandFailed("javac".to_string(), "Command has no exit code (probably due to a SIGINT)".to_string()))
+                    return Err(crate::tasks::TaskError::CommandFailed{
+                        command:"javac".to_string(), 
+                        description: "Command has no exit code (probably due to a SIGINT)".to_string()
+                    })
                 }
             }
             Err(e) => {
-                return Err(crate::tasks::TaskError::CommandFailed("javac".to_string(), e.to_string()))
+                // i.e. The invoked binary doesn't exist.
+                return Err(crate::tasks::TaskError::CommandFailed{command: "javac".to_string(), description: e.to_string()})
             }
         };
 
         if exit_status != 0 {
-            Err(crate::tasks::TaskError::CommandFailed("javac".to_string(), stringify!(exit_status).to_string()))
+            Err(
+                crate::tasks::TaskError::CommandFailed{
+                    command: "javac".to_string(), 
+                    description: exit_status.to_string()
+                }
+            )
         } else {
             Ok(())
         }

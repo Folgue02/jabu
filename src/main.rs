@@ -8,11 +8,12 @@ mod tasks;
 mod args;
 mod tools;
 mod utils;
+mod dslapi;
 
 #[cfg(test)]
 mod tests;
 
-pub const VERSION: &'static str = "0.0.2";
+pub const VERSION: &'static str = "0.0.3";
 
 fn main() {
     let mut args = std::env::args();
@@ -21,32 +22,34 @@ fn main() {
         .to_string();
 
     args.next();
-    let result = match args.next() {
-        Some(task_name) => {
-            let task_manager = TaskManager::default();
-            let jabu_task_manager = JabuTaskManager::default();
-
-            if task_manager.contains_task_with_name(task_name.as_str()) {
-                task_manager.execute(task_name.as_str(), args.collect(), &cwd)
-            } else if jabu_task_manager.contains_task_with_name(task_name.as_str()) {
-                jabu_task_manager.execute(task_name.as_str(), args.collect(), &cwd)
-            } else {
-                Err(TaskError::NoSuchTask(task_name))
-            }
-        }
+    let task_name = match args.next() {
+        Some(task_name) => task_name,
         None => {
-            eprintln!("You didn't specify a task to be run!");
-            exit(1)
+            eprintln!("No task specified!");
+            exit(1);
         }
+    };
+
+    let task_manager = TaskManager::default();
+    let jabu_task_manager = JabuTaskManager::default();
+
+    // TODO: separate this into a different reusable
+    // function.
+    let result = if task_manager.contains_task_with_name(&task_name) {
+        task_manager.execute(task_name.as_str(), args.collect(), &cwd)
+    } else if jabu_task_manager.contains_task_with_name(task_name.as_str()) {
+        jabu_task_manager.execute(task_name.as_str(), args.collect(), &cwd)
+    } else {
+        Err(TaskError::NoSuchTask(task_name.clone()))
     };
 
     let _end_timestamp = chrono::offset::Local::now();
     match result {
         Ok(_) => {
-            // TODO: Display OK message.
+            // TODO: Ok message
         }
         Err(e) => {
-            eprintln!("Something went wrong: {e}");
+            eprintln!("Failure:\n{e}");
             exit(1)
         }
     }

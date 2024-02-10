@@ -1,7 +1,7 @@
 use crate::{config::{JabuConfig, JABU_FILE_NAME}, tools::JavaHome};
 use std::{collections::HashMap, path::{Path, PathBuf}, error::Error};
 
-use super::{TaskError, TaskResult, impls::{Run, DisplayJabuTask, BuildJabuTask}};
+use super::{TaskError, TaskResult, impls::{Run, DisplayJabuTask, BuildJabuTask, ScriptsTask}};
 
 /// Represents a task that it's supposed to be executed inside of a Jabu project.
 pub trait JabuTask {
@@ -44,6 +44,7 @@ impl Default for JabuTaskManager {
         tasks.insert("run".to_string(), Box::new(Run::default()));
         tasks.insert("build".to_string(), Box::new(BuildJabuTask::default()));
         tasks.insert("info".to_string(), Box::new(DisplayJabuTask::default()));
+        tasks.insert("scripts".to_string(), Box::new(ScriptsTask::default()));
         Self {
             tasks
         }
