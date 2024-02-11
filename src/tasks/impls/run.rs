@@ -49,11 +49,25 @@ impl JabuTask for Run {
         } else {
             return Err(crate::tasks::TaskError::Generic("The project it's either not executable, or doesn't contain a 'Main-Class' key in the properties in the jabu config.".to_string()));
         };
+        
+        // Declare the classpath, which should contain the 'target' dir, as well
+        // as the project's libraries (jars).
+        let mut classpath = vec![jabu_config.fs_schema.target.to_string()];
+        let jars: Vec<String> = crate::utils::walkdir_find(
+            &jabu_config.fs_schema.lib,
+            |entry| entry.extension().unwrap_or_default() == "jar",
+            &[crate::utils::FSNodeType::File, crate::utils::FSNodeType::SymLink]
+        ).iter()
+            .map(|entry| entry.to_string_lossy().to_string())
+            .collect();
+        classpath.extend(jars);
+
         let java_tool_config = JavaToolConfig::new(
             JavaExecTarget::MainClass(main_class.to_string()),
-            vec![jabu_config.fs_schema.target.to_string()],
+            classpath,
             Vec::new()
         );
+
         if let Some(java_path) = java_home.get_java() {
             match crate::utils::exec_cmd(java_path.to_str().unwrap(), java_tool_config.into_args()) {
                 Err(e) => {

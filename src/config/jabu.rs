@@ -101,6 +101,7 @@ impl Default for JavaConfig {
 pub struct FsSchema {
     pub source: String,
     pub target: String,
+    pub lib: String,
     pub resources: String,
     pub scripts: String,
     pub test: String,
@@ -112,6 +113,7 @@ impl FsSchema {
         Self {
             source: "./src/main".to_string(),
             target: "./target".to_string(),
+            lib: "./lib".to_string(),
             resources: "./src/resources".to_string(),
             scripts: "./scripts/".to_string(),
             test: "./src/test".to_string(),
@@ -121,14 +123,11 @@ impl FsSchema {
 }
 
 impl FsSchema {
-    pub fn check_integrity(&self, directory: &str) -> Result<(), Vec<String>> {
-        todo!("Not implemented yet :/")    
-    }
-
     pub fn create(&self, base_directory: &str) -> std::io::Result<()> {
-        let mut dirs = Vec::with_capacity(5);
+        let mut dirs = Vec::with_capacity(7);
         dirs.push(&self.source);
         dirs.push(&self.target);
+        dirs.push(&self.lib);
         dirs.push(&self.resources);
         dirs.push(&self.test);
         dirs.push(&self.scripts);

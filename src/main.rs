@@ -15,7 +15,7 @@ mod dslapi;
 #[cfg(test)]
 mod tests;
 
-pub const VERSION: &'static str = "0.0.3";
+pub const VERSION: &'static str = "0.0.4";
 
 fn main() {
     let mut args = std::env::args();

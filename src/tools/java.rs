@@ -5,7 +5,7 @@ pub enum JavaExecTarget{
 
 pub struct JavaToolConfig {
     java_exec_target: JavaExecTarget,
-    classpath: Vec<String>,
+    pub classpath: Vec<String>,
     arguments: Vec<String>
 }
 

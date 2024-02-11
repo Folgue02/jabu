@@ -1,6 +1,7 @@
 use walkdir::WalkDir;
 
 use crate::{
+    utils::FSNodeType,
     config::JavaConfig,
     tasks::JabuTask,
     tools::{JavaHome, JavacConfig}, utils,
@@ -21,31 +22,36 @@ impl JabuTask for BuildJabuTask {
         java_home: &JavaHome,
     ) -> crate::tasks::TaskResult {
         
-        let sources = WalkDir::new(&jabu_config.fs_schema.source)
-            .into_iter()
-            .filter_map(|e| match e {
-                Ok(entry) => Some(entry),
-                Err(_) => None,
-            })
-            .filter(|e| e.file_type().is_file())
-            .map(|e| e.path().to_string_lossy().to_string())
-            .filter(|e| e.ends_with(".java"))
-            .collect::<Vec<String>>();
+        let sources = crate::utils::walkdir_find(
+            &jabu_config.fs_schema.source,
+            |entry| entry.extension().unwrap_or_default() == "java",
+            &[FSNodeType::File]
+        );
 
         println!("Sources to compile: ");
         sources
             .iter()
             .enumerate()
-            .for_each(|(index, source)| println!("{}: {source}", index + 1));
+            .for_each(|(index, source)| println!("{}: {source:?}", index + 1));
         println!("");
 
-        let javac_args: Vec<String> = JavacConfig::new(
-            sources,
+        let mut javac_config = JavacConfig::new(
+            sources.iter().map(|source| source.to_string_lossy().to_string()).collect(),
             Some(jabu_config.fs_schema.target.to_string()),
             Some(jabu_config.java_config.clone()),
-        )
-        .into_args();
+        );
+        
+        // Add the jars under the lib directory of the project.
+        javac_config.classpath = crate::utils::walkdir_find(
+                &jabu_config.fs_schema.lib,
+                |entry| entry.extension().unwrap_or_default() == "jar",
+                &[FSNodeType::File, FSNodeType::SymLink]
+            )
+            .iter()
+            .map(|jar_file| jar_file.to_string_lossy().to_string())
+            .collect();
 
+        let javac_args = javac_config.into_args();
         let javac_path = java_home.get_javac().clone().unwrap().to_string_lossy().to_string();
 
         let exit_status = match utils::exec_cmd(&javac_path, javac_args) {
