@@ -90,12 +90,20 @@ impl JabuTaskManager {
             Ok(java_home) => java_home,
             Err(e) => {
                 eprintln!("Couldn't find a java installation path (it can be specified with the $JAVA_HOME variable)");
-                return Err(TaskError::IOError(e))
+                return Err(TaskError::MissingJavaEnvironment);
+                //return Err(TaskError::IOError(e))
             }
         };
 
         if !java_home.is_valid() {
-            return Err(TaskError::Generic("The java environment found doesn't seem to be valid (doesn't contain all necessary tools)".to_string()));
+            return Err(
+                TaskError::InvalidJavaEnvironment(java_home.get_java_home().to_string_lossy().to_string())
+            )
+            /*return Err (
+                TaskError::Generic (
+                    format!("The java environment found at '{:?}' doesn't seem to be valid (doesn't contain all necessary tools)", java_home.get_java_home())
+                )
+            );*/
         }
 
         println!("Java installation detected: {:?}", java_home.get_java_home());

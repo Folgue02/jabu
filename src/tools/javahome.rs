@@ -1,4 +1,22 @@
-use std::path::PathBuf;
+use std::{collections::HashMap, path::PathBuf};
+
+const JAVA_TOOL_NAME: &'static str = if cfg!(windows) {
+    "java.exe"
+} else {
+    "java"
+};
+
+const JAVAC_TOOL_NAME: &'static str = if cfg!(windows) {
+    "javac.exe"
+} else {
+    "javac"
+};
+
+const JAR_TOOL_NAME: &'static str = if cfg!(windows) {
+    "jar.exe"
+} else {
+    "jar"
+};
 
 pub struct JavaHome {
     java_home: PathBuf,
@@ -13,7 +31,7 @@ impl TryFrom<PathBuf> for JavaHome {
         // TODO: Remove code repetition in this function
 
         let java_path_bin = PathBuf::from(&home).join("bin");
-        let java_path = java_path_bin.join("java");
+        let java_path = java_path_bin.join(JAVA_TOOL_NAME);
         let java = match std::fs::metadata(&java_path) {
             Ok(f) => {
                 if f.is_file() {
@@ -22,10 +40,13 @@ impl TryFrom<PathBuf> for JavaHome {
                     None
                 }
             }
-            Err(_) => None
+            Err(e) => {
+                eprintln!("{e}");
+                None
+            }
         };
 
-        let jar_path = java_path_bin.join("jar");
+        let jar_path = java_path_bin.join(JAR_TOOL_NAME);
         let jar = match std::fs::metadata(&jar_path) {
             Ok(f) => {
                 if f.is_file() {
@@ -37,7 +58,7 @@ impl TryFrom<PathBuf> for JavaHome {
             Err(_) => None
         };
 
-        let javac_path = java_path_bin.join("javac");
+        let javac_path = java_path_bin.join(JAVAC_TOOL_NAME);
         let javac = match std::fs::metadata(&javac_path) {
             Ok(f) => {
                 if f.is_file() {
@@ -81,10 +102,24 @@ impl JavaHome {
         &self.jar
     }
 
+    /// Checks if all the tools have a registered path.
+    /// If at least one of them is `None`, this method will
+    /// return `false`
     pub fn is_valid(&self) -> bool {
         self.java.is_some()
             && self.javac.is_some()
             && self.jar.is_some()
+    }
+
+    /// This function returns a map containing the name of the tool as a
+    /// key, and the `PathBuf` pointing to the tool as a value. If the value
+    /// is `None`, it means that it couldn't be found.
+    pub fn get_tools(&self) -> HashMap<&'static str, &Option<PathBuf>> {
+        let mut hm = HashMap::new();
+        hm.insert("javac", &self.javac);
+        hm.insert("java", &self.java);
+        hm.insert("jar", &self.jar);
+        hm
     }
 
     pub fn get_java_home(&self) -> &PathBuf {

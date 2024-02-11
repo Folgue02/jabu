@@ -3,6 +3,8 @@ use std::process::exit;
 use tasks::{TaskManager, JabuTaskManager, TaskError};
 use chrono;
 
+use crate::tools::JavaHome;
+
 mod config;
 mod tasks;
 mod args;
@@ -45,12 +47,20 @@ fn main() {
 
     let _end_timestamp = chrono::offset::Local::now();
     match result {
-        Ok(_) => {
-            // TODO: Ok message
-        }
         Err(e) => {
             eprintln!("Failure:\n{e}");
+
+            // TODO: Remove or keep?
+            if let TaskError::InvalidJavaEnvironment(_) = e {
+                let java_home = JavaHome::new().unwrap();
+                java_home.get_tools()
+                    .iter()
+                    .for_each(|(tool_name, tool_path)| {
+                        println!("{tool_name}: {tool_path:?}");
+                    });
+            }
             exit(1)
         }
+        _ => ()
     }
 }

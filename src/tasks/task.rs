@@ -1,14 +1,24 @@
-use std::collections::{HashMap, HashSet};
 use crate::args::parser::InvalidArgError;
-use crate::tasks::impls::{VersionTask, NewProjectTask};
+use crate::tasks::impls::{NewProjectTask, VersionTask};
+use std::collections::{HashMap, HashSet};
 
 pub type TaskResult = Result<(), TaskError>;
 
 /// Represents the failure of a task.
 #[derive(Debug)]
 pub enum TaskError {
+    /// Couldn't find any java environment.
+    MissingJavaEnvironment,
+
+    /// The java environment that has been found is not valid. (*it may be missing
+    /// some of the utilities*)
+    InvalidJavaEnvironment(String),
+
     /// Signifies the failure of the execution of an external command.
-    CommandFailed{command: String, description: String},
+    CommandFailed {
+        command: String,
+        description: String,
+    },
 
     /// Invalid configuration, this can mean that the configuration of the
     /// projet was wrong.
@@ -24,12 +34,15 @@ pub enum TaskError {
     /// Invalid arguments have been supplied.
     InvalidArguments(HashSet<InvalidArgError>),
 
-    /// A task has specified a non existent task as 
+    /// A task has specified a non existent task as
     /// dependency.
     DependencyTaskDoesntExist(String),
 
     /// A dependency task specified by another task has failed.
-    DependencyTaskFailed{ task_name: String, description: String},
+    DependencyTaskFailed {
+        task_name: String,
+        description: String,
+    },
 
     /// Generic error with a message attached to it.
     Generic(String),
@@ -38,6 +51,8 @@ pub enum TaskError {
 impl std::fmt::Display for TaskError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let msg = match self {
+            Self::MissingJavaEnvironment => "No java environment could be found. (you can specify one with the environment variable 'JAVA_HOME'".to_string(),
+            Self::InvalidJavaEnvironment(env) => format!("'{env}' as a java home is invalid (it might be missing some tools)"),
             Self::Generic(desc) => format!("Something went wrong: {desc}"),
             Self::IOError(io_error) => format!("An IO error has occurred: {io_error}"),
             Self::DependencyTaskFailed { task_name, description } => {
@@ -55,7 +70,7 @@ impl std::fmt::Display for TaskError {
             }
             Self::NoSuchTask(task_name) => format!("Task with name '{task_name}' doesn't exist."),
             Self::CommandFailed {command, description} => {
-                format!("Command '{command}' due to the following error/error code: {description}")
+                format!("Command '{command}' with the following error/error code: {description}")
             }
             Self::InvalidArguments(errors) => {
                 let error_list_compiled = errors.iter()
@@ -86,7 +101,7 @@ pub trait Task: std::fmt::Debug {
 
 #[derive(Debug)]
 pub struct TaskManager {
-    tasks: HashMap<String, Box<dyn Task>>
+    tasks: HashMap<String, Box<dyn Task>>,
 }
 
 impl Default for TaskManager {
@@ -94,9 +109,7 @@ impl Default for TaskManager {
         let mut tasks: HashMap<String, Box<dyn Task>> = HashMap::new();
         tasks.insert("new".to_string(), Box::new(NewProjectTask {}));
         tasks.insert("version".to_string(), Box::new(VersionTask::default()));
-        Self {
-            tasks
-        }
+        Self { tasks }
     }
 }
 
@@ -111,8 +124,7 @@ impl TaskManager {
     }
 
     pub fn contains_task_with_name(&self, task_name: &str) -> bool {
-        self.tasks.iter()
-            .any(|(t_name, _)| task_name == t_name)
+        self.tasks.iter().any(|(t_name, _)| task_name == t_name)
     }
 
     pub fn remove(&mut self, task_name: &str) -> Option<Box<dyn Task>> {
