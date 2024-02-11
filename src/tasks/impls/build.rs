@@ -37,7 +37,7 @@ impl JabuTask for BuildJabuTask {
 
         let mut javac_config = JavacConfig::new(
             sources.iter().map(|source| source.to_string_lossy().to_string()).collect(),
-            Some(jabu_config.fs_schema.target.to_string()),
+            Some(jabu_config.fs_schema.target_classes()),
             Some(jabu_config.java_config.clone()),
         );
         

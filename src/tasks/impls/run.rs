@@ -52,7 +52,7 @@ impl JabuTask for Run {
         
         // Declare the classpath, which should contain the 'target' dir, as well
         // as the project's libraries (jars).
-        let mut classpath = vec![jabu_config.fs_schema.target.to_string()];
+        let mut classpath = vec![jabu_config.fs_schema.target_classes()];
         let jars: Vec<String> = crate::utils::walkdir_find(
             &jabu_config.fs_schema.lib,
             |entry| entry.extension().unwrap_or_default() == "jar",

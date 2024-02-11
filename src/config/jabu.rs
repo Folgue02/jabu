@@ -140,4 +140,20 @@ impl FsSchema {
 
         Ok(())
     }
+
+    /// Returns the path for the generated classes inside of the target dir.
+    pub fn target_classes(&self) -> String {
+        PathBuf::from(&self.target)
+            .join("classes")
+            .to_string_lossy()
+            .to_string()
+    }
+
+    /// Returns the path for the generated binaries inside of the target dir.
+    pub fn target_bin(&self) -> String {
+        PathBuf::from(&self.target)
+            .join("bin")
+            .to_string_lossy()
+            .to_string()
+    }
 }
