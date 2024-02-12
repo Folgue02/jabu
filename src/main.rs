@@ -1,6 +1,6 @@
 use std::process::exit;
 
-use tasks::{TaskManager, JabuTaskManager, TaskError};
+use tasks::{TaskManager, JabuTaskManager, TaskError, GeneralTaskManager};
 use chrono;
 
 use crate::tools::JavaHome;
@@ -32,19 +32,9 @@ fn main() {
         }
     };
 
-    let task_manager = TaskManager::default();
-    let jabu_task_manager = JabuTaskManager::default();
+    let general_task_manager = GeneralTaskManager::default();
 
-    // TODO: separate this into a different reusable
-    // function.
-    let result = if task_manager.contains_task_with_name(&task_name) {
-        task_manager.execute(task_name.as_str(), args.collect(), &cwd)
-    } else if jabu_task_manager.contains_task_with_name(task_name.as_str()) {
-        jabu_task_manager.execute(task_name.as_str(), args.collect(), &cwd)
-    } else {
-        Err(TaskError::NoSuchTask(task_name.clone()))
-    };
-
+    let result = general_task_manager.execute(&task_name, args.collect(), &cwd);
     let _end_timestamp = chrono::offset::Local::now();
     match result {
         Err(e) => {

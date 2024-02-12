@@ -1,6 +1,6 @@
 use crate::args::parser::InvalidArgError;
-use crate::tasks::impls::{NewProjectTask, VersionTask};
-use std::collections::{HashMap, HashSet};
+use crate::{tasks::{impls::{NewProjectTask, VersionTask}, JabuTaskManager}, tools::JavaHome, config::{JabuConfig, JABU_FILE_NAME}};
+use std::{collections::{HashMap, HashSet}, path::PathBuf};
 
 pub type TaskResult = Result<(), TaskError>;
 
@@ -143,5 +143,53 @@ impl TaskManager {
         };
 
         task.execute(args)
+    }
+}
+
+/// The `GeneralTaskManager` is a task manager with the same purposes 
+/// as the normal `TaskManager` and the `JabuTaskManager`, but has the 
+/// additional purpose of containing those task managers together and 
+/// centralizing all the use logic.
+pub struct GeneralTaskManager {
+    jabu_task_manager: JabuTaskManager,
+    task_manager: TaskManager
+}
+
+impl Default for GeneralTaskManager {
+    fn default() -> Self {
+        Self {
+            jabu_task_manager: JabuTaskManager::default(),
+            task_manager: TaskManager::default()
+        }
+    }
+}
+
+impl GeneralTaskManager {
+    pub fn new(jabu_task_manager: JabuTaskManager, task_manager: TaskManager) -> Self {
+        Self {
+            jabu_task_manager,
+            task_manager
+        }
+    }
+
+    /// Checks if any of the task managers contain a task with the given
+    /// name.
+    pub fn contains_task_with_name(&self, task_name: &str) -> bool {
+        self.jabu_task_manager.contains_task_with_name(task_name)
+            || self.task_manager.contains_task_with_name(task_name)
+    }
+
+    /// Executes the task associated with the given task name. This task may be in any of the
+    /// stored task managers. This method may return `TaskError:NoSuchTask` if there is no
+    /// task with the given name in any of the stored task managers.
+    pub fn execute(&self, task_name: &str, args: Vec<String>, directory: &str) -> TaskResult {
+        // TODO: Refactor :D
+        if let Some(_) = self.jabu_task_manager.get_task(task_name) {
+            self.jabu_task_manager.execute(task_name, args, directory)
+        } else if let Some(_) = self.task_manager.get_task(task_name) {
+            self.task_manager.execute(task_name, args, directory)
+        } else {
+            Err(TaskError::NoSuchTask(task_name.to_string()))
+        }
     }
 }
