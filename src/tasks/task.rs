@@ -1,6 +1,7 @@
 use crate::args::parser::InvalidArgError;
+use prettytable::{Table, Row, Attr, Cell, color, format::FormatBuilder};
 use crate::{tasks::{impls::{NewProjectTask, VersionTask}, JabuTaskManager}, tools::JavaHome, config::{JabuConfig, JABU_FILE_NAME}};
-use std::{collections::{HashMap, HashSet}, path::PathBuf};
+use std::{io::Write, collections::{HashMap, HashSet}, path::PathBuf};
 
 pub type TaskResult = Result<(), TaskError>;
 
@@ -183,6 +184,7 @@ impl GeneralTaskManager {
     pub fn contains_task_with_name(&self, task_name: &str) -> bool {
         self.jabu_task_manager.contains_task_with_name(task_name)
             || self.task_manager.contains_task_with_name(task_name)
+            || task_name == "help"
     }
 
     /// Executes the task associated with the given task name. This task may be in any of the
@@ -190,6 +192,11 @@ impl GeneralTaskManager {
     /// task with the given name in any of the stored task managers.
     pub fn execute(&self, task_name: &str, args: Vec<String>, directory: &str) -> TaskResult {
         // TODO: Refactor :D
+        if task_name == "help" {
+            self.list_tasks();
+            return Ok(())
+       }
+
         if let Some(_) = self.jabu_task_manager.get_task(task_name) {
             self.jabu_task_manager.execute(task_name, args, directory)
         } else if let Some(_) = self.task_manager.get_task(task_name) {
@@ -197,5 +204,61 @@ impl GeneralTaskManager {
         } else {
             Err(TaskError::NoSuchTask(task_name.to_string()))
         }
+    }
+
+    fn list_tasks(&self) {
+        // TODO: Change
+        let mut table = prettytable::Table::new();
+        table.set_format(*prettytable::format::consts::FORMAT_BORDERS_ONLY);
+        table.add_row(
+            Row::new(
+                vec![
+                    Cell::new("TASKS")
+                        .with_style(Attr::Bold)
+                        .with_style(Attr::BackgroundColor(color::BRIGHT_BLACK))
+                        .with_style(Attr::ForegroundColor(color::WHITE))
+                ]
+            )
+        );
+        table.set_titles(
+            Row::new(vec![
+                Cell::new("Task name"),
+                Cell::new("Description")
+            ])
+        );
+        self.task_manager.tasks.iter()
+            .for_each(|(name, task)| {
+                table.add_row(
+                    Row::new(vec![
+                        Cell::new(&name)
+                            .with_style(Attr::Bold)
+                            .with_style(Attr::ForegroundColor(color::BLUE)),
+                        Cell::new(&task.description())
+                    ])
+                );
+            });
+        table.add_empty_row();
+        table.add_row(
+            Row::new(
+                vec![
+                    Cell::new("JABU TASKS")
+                        .with_style(Attr::Bold)
+                        .with_style(Attr::BackgroundColor(color::BRIGHT_BLACK))
+                        .with_style(Attr::ForegroundColor(color::WHITE))
+                ]
+            )
+        );
+        self.jabu_task_manager.tasks.iter()
+            .for_each(|(name, task)| {
+                table.add_row(
+                    Row::new(vec![
+                        Cell::new(&name)
+                            .with_style(Attr::Bold)
+                            .with_style(Attr::ForegroundColor(color::BLUE)),
+                        Cell::new(&task.description())
+                    ])
+                );
+            });
+        table.printstd();
     }
 }
