@@ -1,13 +1,7 @@
 use crate::tasks::Task;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct VersionTask;
-
-impl Default for VersionTask {
-    fn default() -> Self {
-        Self
-    }
-}
 
 impl Task for VersionTask {
     fn execute(&self, args: Vec<String>) -> crate::tasks::TaskResult {

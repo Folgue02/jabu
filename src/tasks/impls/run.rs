@@ -5,14 +5,8 @@ use std::collections::HashMap;
 use crate::args::options::{Options, ParOptionBuilder, ParOption};
 use crate::args::parser::ParsedArguments;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Run {
-}
-
-impl Default for Run {
-    fn default() -> Self {
-        Self {}
-    }
 }
 
 impl Run {

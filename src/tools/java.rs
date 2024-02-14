@@ -1,5 +1,9 @@
+/// Represents the type of execution of the `java` command.
 pub enum JavaExecTarget{
+    /// Execute an specified class.
     MainClass(String),
+
+    /// Execute an specified jar.
     Jar(String),
 }
 

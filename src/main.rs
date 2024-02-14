@@ -1,6 +1,6 @@
 use std::process::exit;
 
-use tasks::{TaskManager, JabuTaskManager, TaskError, GeneralTaskManager};
+use tasks::{TaskError, GeneralTaskManager};
 use chrono;
 
 use crate::tools::JavaHome;

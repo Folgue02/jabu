@@ -11,6 +11,11 @@ impl Default for Options {
 }
 
 impl Options {
+    /// Adds an option to the collection of options.
+    ///
+    /// # See
+    ///
+    /// [`crate::args::options::ParOptionBuilder`] for creating options.
     pub fn add_option(&mut self, option: ParOption) -> bool {
         if self.exists(&option) {
             false

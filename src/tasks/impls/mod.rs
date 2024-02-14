@@ -5,6 +5,7 @@ mod build;
 mod version;
 mod scripts;
 mod clean;
+mod jar;
 
 pub use run::*;
 pub use new::*;
@@ -13,3 +14,4 @@ pub use build::*;
 pub use version::*;
 pub use scripts::*;
 pub use clean::*;
+pub use jar::*;

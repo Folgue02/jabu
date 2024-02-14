@@ -123,3 +123,35 @@ mod java {
         assert_eq!(expected, java_tool.into_args());
     }
 }
+
+mod jar {
+    use std::path::PathBuf;
+    use crate::tools::JarToolConfig;
+
+    #[test]
+    fn simple_compression() {
+        let expected = vec![
+            "--create".to_string(),
+            "--file".to_string(),
+            "./target.jar".to_string(),
+            "-C".to_string(), "target/classes".to_string(), ".".to_string()
+        ];
+        let config = JarToolConfig::new("./target.jar".to_string(), "target/classes".to_string());
+        assert_eq!(expected, config.into_args())
+    }
+
+
+    #[test]
+    fn compression_with_manifest() {
+        let expected = vec![
+            "--create".to_string(),
+            "--file".to_string(),
+            "./target.jar".to_string(),
+            "--manifest".to_string(), "./target/bin/MANIFEST.MF".to_string(),
+            "-C".to_string(), "target/classes".to_string(), ".".to_string()
+        ];
+        let mut config = JarToolConfig::new("./target.jar".to_string(), "target/classes".to_string());
+        config.manifest_location = Some(PathBuf::from("./target/bin/MANIFEST.MF".to_string()));
+        assert_eq!(expected, config.into_args())
+    }
+}

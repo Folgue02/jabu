@@ -1,12 +1,7 @@
 use crate::{config::JabuConfig, tools::JavaHome, tasks::{TaskError, JabuTask, TaskResult}};
 
+#[derive(Default)]
 pub struct CleanTask;
-
-impl Default for CleanTask {
-    fn default() -> Self { 
-        Self
-    }
-}
 
 impl JabuTask for CleanTask {
     fn execute(&self, _: Vec<String>, jabu_config: &JabuConfig, _: &JavaHome) -> TaskResult {

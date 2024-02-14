@@ -1,12 +1,7 @@
 use crate::{tasks::JabuTask, tools::JavaHome};
 
+#[derive(Default)]
 pub struct DisplayJabuTask {}
-
-impl Default for DisplayJabuTask {
-    fn default() -> Self {
-        Self {}
-    }
-}
 
 impl JabuTask for DisplayJabuTask {
     fn description(&self) -> String {

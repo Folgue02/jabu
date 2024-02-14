@@ -47,6 +47,12 @@ impl JabuConfig {
             properties: HashMap::new()
         }
     }
+
+    /// Returns the display name of the project. Serves as a standard
+    /// for representing a project. (*`{project name}-{project version}`*)
+    pub fn display_name(&self) -> String {
+        format!("{}-{}", self.header.project_name, self.header.version)
+    }
 }
 
 /// Header of the project, containing the metadata, such as
@@ -60,6 +66,8 @@ pub struct ConfigHeader {
 }
 
 impl ConfigHeader {
+    /// Creates a configuration header containing the given name
+    /// and the default values for the rest of the fields.
     pub fn of_proj_name(proj_name: &str) -> ConfigHeader {
         Self {
             project_name: proj_name.to_string(),

@@ -8,8 +8,8 @@ use crate::{
 };
 use std::{collections::HashSet, path::Path};
 
-#[derive(Debug)]
-pub struct NewProjectTask {}
+#[derive(Debug, Default)]
+pub struct NewProjectTask;
 
 impl NewProjectTask {
     fn get_options() -> Options {

@@ -48,6 +48,12 @@ pub enum TaskError {
     Generic(String),
 }
 
+impl From<std::io::Error> for TaskError {
+    fn from(value: std::io::Error) -> Self {
+        Self::IOError(value)
+    }
+}
+
 impl std::fmt::Display for TaskError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let msg = match self {

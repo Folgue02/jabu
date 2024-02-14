@@ -1,8 +1,15 @@
 use std::path::PathBuf;
 
+/// Represents the different types of files in the 
+/// file system.
 pub enum FSNodeType {
+    /// A regular file.
     File,
+
+    // A regular directory.
     Dir,
+
+    /// A symlink to either a file or a directory.
     SymLink,
 }
 

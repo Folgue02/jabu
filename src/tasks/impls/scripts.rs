@@ -1,13 +1,9 @@
 use crate::{tasks::JabuTask, args::{parser::ParsedArguments, options::{Options, ParOptionBuilder}}, config::JabuConfig};
 use std::{ffi::OsStr, path::{PathBuf, Path}, collections::HashMap};
 use pyo3::prelude::*;
-pub struct ScriptsTask;
 
-impl Default for ScriptsTask {
-    fn default() -> Self {
-        Self
-    }
-}
+#[derive(Default)]
+pub struct ScriptsTask;
 
 impl JabuTask for ScriptsTask {
     fn execute(&self, args: Vec<String>, jabu_config: &crate::config::JabuConfig, java_home: &crate::tools::JavaHome) -> crate::tasks::TaskResult {
