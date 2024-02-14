@@ -15,7 +15,11 @@ mod dslapi;
 #[cfg(test)]
 mod tests;
 
-pub const VERSION: &'static str = "0.0.4";
+pub mod built_info {
+    include!(concat!(env!("OUT_DIR"), "/built.rs"));
+}
+
+pub const VERSION: &'static str = built_info::PKG_VERSION;
 
 fn main() {
     let mut args = std::env::args();
