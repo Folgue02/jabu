@@ -49,7 +49,7 @@ impl JabuTaskDependencySpec {
 }
 
 pub struct JabuTaskManager {
-    tasks: HashMap<String, Box<dyn JabuTask>>
+    pub tasks: HashMap<String, Box<dyn JabuTask>>
 }
 
 impl Default for JabuTaskManager {

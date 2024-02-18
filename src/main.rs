@@ -15,7 +15,11 @@ mod dslapi;
 #[cfg(test)]
 mod tests;
 
-pub const VERSION: &'static str = "0.0.4";
+pub mod built_info {
+    include!(concat!(env!("OUT_DIR"), "/built.rs"));
+}
+
+pub const VERSION: &'static str = built_info::PKG_VERSION;
 
 fn main() {
     let mut args = std::env::args();
@@ -38,19 +42,24 @@ fn main() {
     let _end_timestamp = chrono::offset::Local::now();
     match result {
         Err(e) => {
-            eprintln!("Failure:\n{e}");
-
-            // TODO: Remove or keep?
-            if let TaskError::InvalidJavaEnvironment(_) = e {
-                let java_home = JavaHome::new().unwrap();
-                java_home.get_tools()
-                    .iter()
-                    .for_each(|(tool_name, tool_path)| {
-                        println!("{tool_name}: {tool_path:?}");
-                    });
-            }
-            exit(1)
+            handle_error(e);
         }
         _ => ()
     }
+}
+
+fn handle_error(e: TaskError) -> ! {
+    eprintln!("Failure:\n{e}");
+
+    // TODO: Remove or keep?
+    if let TaskError::InvalidJavaEnvironment(_) = e {
+        eprintln!("JDK tools status: ");
+        let java_home = JavaHome::new().unwrap();
+        java_home.get_tools()
+            .iter()
+            .for_each(|(tool_name, tool_path)| {
+                eprintln!("{tool_name}: {tool_path:?}");
+            });
+    }
+    exit(1)
 }
