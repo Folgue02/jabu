@@ -8,12 +8,13 @@ use super::{
     TaskError, 
     TaskResult,
     impls::{
+        deps, 
         Run,
         DisplayJabuTask,
         BuildJabuTask,
         ScriptsTask,
         CleanTask,
-        JarTask
+        JarTask,
     }
 };
 
@@ -48,12 +49,23 @@ impl JabuTaskDependencySpec {
     }
 }
 
+/// Contains a collection [`JabuTask`] that can be executed.
 pub struct JabuTaskManager {
     pub tasks: HashMap<String, Box<dyn JabuTask>>
 }
 
 impl Default for JabuTaskManager {
     fn default() -> Self {
+        Self {
+            tasks: HashMap::new()
+        }
+    }
+}
+
+impl JabuTaskManager {
+    /// Creates the default jabu task manager for the top level tasks 
+    /// (*the main tasks available for jabu such as `new` or `version`.
+    pub fn top_level_default() -> Self {
         let mut tasks: HashMap<String, Box<dyn JabuTask>> = HashMap::new();
         tasks.insert("run".to_string(), Box::new(Run::default()));
         tasks.insert("build".to_string(), Box::new(BuildJabuTask::default()));
@@ -61,13 +73,12 @@ impl Default for JabuTaskManager {
         tasks.insert("scripts".to_string(), Box::new(ScriptsTask::default()));
         tasks.insert("clean".to_string(), Box::new(CleanTask::default()));
         tasks.insert("jar".to_string(), Box::new(JarTask::default()));
+        tasks.insert("deps".to_string(), Box::new(deps::DepsSubtask::default()));
         Self {
             tasks
         }
     }
-}
 
-impl JabuTaskManager {
     pub fn register_task(&mut self, task_name: &str, new_task: Box<dyn JabuTask>) -> bool {
         if self.contains_task_with_name(task_name) {
             false
@@ -99,7 +110,7 @@ impl JabuTaskManager {
 
         let jabu_config = match JabuConfig::try_from(PathBuf::from(directory).join(JABU_FILE_NAME)) {
             Ok(cfg) => cfg,
-            Err(e) => return Err(TaskError::IOError(e))
+            Err(e) => return Err(TaskError::InvalidConfig(Box::new(e)))
         };
 
         let java_home = match JavaHome::new() {
@@ -115,14 +126,7 @@ impl JabuTaskManager {
             return Err(
                 TaskError::InvalidJavaEnvironment(java_home.get_java_home().to_string_lossy().to_string())
             )
-            /*return Err (
-                TaskError::Generic (
-                    format!("The java environment found at '{:?}' doesn't seem to be valid (doesn't contain all necessary tools)", java_home.get_java_home())
-                )
-            );*/
         }
-
-        println!("Java installation detected: {:?}", java_home.get_java_home());
 
         for (task_name, task_args) in task.get_dependency_task_specs().specs {
             println!("=> Executing dependency task '{task_name}' with args '{task_args:?}'");

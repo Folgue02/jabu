@@ -6,6 +6,7 @@ mod version;
 mod scripts;
 mod clean;
 mod jar;
+pub mod deps;
 
 pub use run::*;
 pub use new::*;

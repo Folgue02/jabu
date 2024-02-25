@@ -36,7 +36,10 @@ fn main() {
         }
     };
 
-    let general_task_manager = GeneralTaskManager::default();
+    let general_task_manager = GeneralTaskManager::new(
+        tasks::JabuTaskManager::top_level_default(),
+        tasks::TaskManager::top_level_default()
+    );
 
     let result = general_task_manager.execute(&task_name, args.collect(), &cwd);
     let _end_timestamp = chrono::offset::Local::now();

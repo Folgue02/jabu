@@ -1,6 +1,20 @@
 use crate::args::parser::InvalidArgError;
 use prettytable::{Table, Row, Attr, Cell, color, format::FormatBuilder};
-use crate::{tasks::{impls::{NewProjectTask, VersionTask}, JabuTaskManager}, tools::JavaHome, config::{JabuConfig, JABU_FILE_NAME}};
+use crate::{
+    tasks::{
+        impls::{
+            NewProjectTask,
+            VersionTask
+        },
+        JabuTaskManager,
+        JabuTask
+    },
+    tools::JavaHome,
+    config::{
+        JabuConfig,
+        JABU_FILE_NAME
+    }
+};
 use std::{io::Write, collections::{HashMap, HashSet}, path::PathBuf};
 
 pub type TaskResult = Result<(), TaskError>;
@@ -23,7 +37,7 @@ pub enum TaskError {
 
     /// Invalid configuration, this can mean that the configuration of the
     /// projet was wrong.
-    InvalidConfig(Option<String>),
+    InvalidConfig(Box<dyn std::error::Error>),
 
     /// The provided task didn't exist.
     NoSuchTask(String),
@@ -68,12 +82,8 @@ impl std::fmt::Display for TaskError {
             Self::DependencyTaskDoesntExist(dependency_task) => {
                 format!("A task called a dependency task '{dependency_task}' which doesn't exist.")
             }
-            Self::InvalidConfig(possible_description) => {
-                if let Some(description) = possible_description {
-                    format!("The project's jabu configuration is invalid: {description}")
-                } else {
-                    format!("The project's jabu configuration is invalid.")
-                }
+            Self::InvalidConfig(description) => {
+                format!("The project's jabu configuration is invalid: {description}")
             }
             Self::NoSuchTask(task_name) => format!("Task with name '{task_name}' doesn't exist."),
             Self::CommandFailed {command, description} => {
@@ -113,14 +123,22 @@ pub struct TaskManager {
 
 impl Default for TaskManager {
     fn default() -> Self {
+        Self {
+            tasks: HashMap::new()
+        }
+    }
+}
+
+impl TaskManager {
+    /// Creates the default task manager for the top level tasks 
+    /// (*the main tasks available for jabu such as `new` or `version`.
+    pub fn top_level_default() -> Self {
         let mut tasks: HashMap<String, Box<dyn Task>> = HashMap::new();
         tasks.insert("new".to_string(), Box::new(NewProjectTask {}));
         tasks.insert("version".to_string(), Box::new(VersionTask::default()));
         Self { tasks }
     }
-}
 
-impl TaskManager {
     pub fn register_task(&mut self, task_name: &str, new_task: Box<dyn Task>) -> bool {
         if self.contains_task_with_name(task_name) {
             false
@@ -260,5 +278,17 @@ impl GeneralTaskManager {
                 );
             });
         table.printstd();
+    }
+
+    /// Registers a new [`crate::tasks::Task`] in the internal [`crate::tasks::TaskManager`]
+    /// of the manager.
+    pub fn register_task(&mut self, task_name: &str, task: Box<dyn Task>) -> bool {
+        self.task_manager.register_task(task_name, task)
+    }
+
+    /// Registers a new [`crate::tasks::Task`] in the internal [`crate::tasks::JabuTaskManager`]
+    /// of the manager.
+    pub fn register_jabu_task(&mut self, task_name: &str, jabu_task: Box<dyn JabuTask>) -> bool {
+        self.jabu_task_manager.register_task(task_name, jabu_task)
     }
 }
