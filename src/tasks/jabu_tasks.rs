@@ -27,6 +27,12 @@ pub trait JabuTask {
     fn get_dependency_task_specs(&self) -> JabuTaskDependencySpec {
         JabuTaskDependencySpec::default()
     }
+
+    /// Returns an slice of strings with the names
+    /// of the required tools for the task (*i.e. `&["javac", "java"]`*)
+    fn required_tools(&self) -> &[&'static str] {
+        &[]
+    }
 }
 
 pub struct JabuTaskDependencySpec {
@@ -115,18 +121,20 @@ impl JabuTaskManager {
 
         let java_home = match JavaHome::new() {
             Ok(java_home) => java_home,
-            Err(e) => {
+            Err(_) => {
                 eprintln!("Couldn't find a java installation path (it can be specified with the $JAVA_HOME variable)");
                 return Err(TaskError::MissingJavaEnvironment);
-                //return Err(TaskError::IOError(e))
             }
         };
 
+        
+        /* TODO: Remove me
         if !java_home.is_valid() {
             return Err(
                 TaskError::InvalidJavaEnvironment(java_home.get_java_home().to_string_lossy().to_string())
             )
         }
+        */
 
         for (task_name, task_args) in task.get_dependency_task_specs().specs {
             println!("=> Executing dependency task '{task_name}' with args '{task_args:?}'");

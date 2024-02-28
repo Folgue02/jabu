@@ -155,3 +155,63 @@ mod jar {
         assert_eq!(expected, config.into_args())
     }
 }
+
+mod javadoc {
+    use crate::{
+        config::JavaConfig, 
+        tools::{
+            JavadocToolConfig,
+            JavaVisibilityLevel
+        }
+    };
+
+    #[test]
+    fn simple_javadoc_args() {
+        let expected = vec![
+            "src/main/App.java", "src/main/registry/Person.java",
+            "-d", "target/docs",
+            "--source", "17",
+            "--release", "17",
+            "-private"
+        ];
+        let input = JavadocToolConfig::new(
+            vec!["src/main/App.java".to_string(), "src/main/registry/Person.java".to_string()],
+            Some("target/docs".to_string()),
+            Some(JavaConfig::default()),
+            JavaVisibilityLevel::Private
+        );
+        assert_eq!(expected, input.into_args());
+    }
+
+    #[test]
+    fn missing_output_dir() {
+        let expected = vec![
+            "src/main/App.java", "src/main/registry/Person.java",
+            "--source", "17",
+            "--release", "17",
+            "-private"
+        ];
+        let input = JavadocToolConfig::new(
+            vec!["src/main/App.java".to_string(), "src/main/registry/Person.java".to_string()],
+            None,
+            Some(JavaConfig::default()),
+            JavaVisibilityLevel::Private
+        );
+        assert_eq!(expected, input.into_args());
+    }
+
+    #[test]
+    fn missing_output_dir_missing_java_config() {
+        let expected = vec![
+            "src/main/App.java", "src/main/registry/Person.java",
+            "-private"
+        ];
+        let input = JavadocToolConfig::new(
+            vec!["src/main/App.java".to_string(), "src/main/registry/Person.java".to_string()],
+            None,
+            None,
+            JavaVisibilityLevel::Private
+        );
+        assert_eq!(expected, input.into_args());
+    }
+}

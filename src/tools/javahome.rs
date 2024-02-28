@@ -18,64 +18,59 @@ const JAR_TOOL_NAME: &'static str = if cfg!(windows) {
     "jar"
 };
 
+const JAVADOC_TOOL_NAME: &'static str = if cfg!(windows) {
+    "javadoc.exe"
+} else {
+    "javadoc"
+};
+
+/// Structure that holds the paths to the different tools provided 
+/// by the jdk. This structure might not contain the paths for
+/// all the existing tools, or not even for one tool.
+///
+/// # See
+/// - [`JavaHome::get_java`], as an example for retrieving the path of a tool.
+/// - [`JavaHome::is_valid`], which checks if **all** tools are available.
 pub struct JavaHome {
     java_home: PathBuf,
     java: Option<PathBuf>,
     javac: Option<PathBuf>,
     jar: Option<PathBuf>,
+    javadoc: Option<PathBuf>
+}
+
+/// Checks if the given path points to a file, if it exists, it
+/// will be returned as `Some(T)`, if not, `None` is returned.
+fn if_path_exists(path: PathBuf) -> Option<PathBuf> {
+    std::fs::metadata(&path)
+        .ok()
+        .filter(|md| md.is_file())
+        .map(|_| path)
 }
 
 impl TryFrom<PathBuf> for JavaHome {
     type Error = std::io::Error;
     fn try_from(home: PathBuf) -> Result<Self, Self::Error> {
-        // TODO: Remove code repetition in this function
-
         let java_path_bin = PathBuf::from(&home).join("bin");
+
         let java_path = java_path_bin.join(JAVA_TOOL_NAME);
-        let java = match std::fs::metadata(&java_path) {
-            Ok(f) => {
-                if f.is_file() {
-                    Some(java_path)
-                } else {
-                    None
-                }
-            }
-            Err(e) => {
-                eprintln!("{e}");
-                None
-            }
-        };
+        let java = if_path_exists(java_path);
 
         let jar_path = java_path_bin.join(JAR_TOOL_NAME);
-        let jar = match std::fs::metadata(&jar_path) {
-            Ok(f) => {
-                if f.is_file() {
-                    Some(jar_path)
-                } else {
-                    None
-                }
-            }
-            Err(_) => None
-        };
+        let jar = if_path_exists(jar_path);
+
+        let javadoc_path = java_path_bin.join(JAVADOC_TOOL_NAME);
+        let javadoc = if_path_exists(javadoc_path); 
 
         let javac_path = java_path_bin.join(JAVAC_TOOL_NAME);
-        let javac = match std::fs::metadata(&javac_path) {
-            Ok(f) => {
-                if f.is_file() {
-                    Some(javac_path)
-                } else {
-                    None
-                }
-            }
-            Err(_) => None
-        };
-
+        let javac = if_path_exists(javac_path); 
 
         Ok(Self {
             java_home: home,
             java,
             jar,
-            javac
+            javac,
+            javadoc
         })
     }
 }
@@ -90,25 +85,54 @@ impl JavaHome {
         Self::try_from(java_home)
     }
 
+    /// Path to the 'java' tool.
     pub fn get_java(&self) -> &Option<PathBuf> {
         &self.java
     }
 
+    /// Path to the 'javac' tool.
     pub fn get_javac(&self) -> &Option<PathBuf> {
         &self.javac
     }
 
+    /// Path to the 'jar' tool.
     pub fn get_jar(&self) -> &Option<PathBuf> {
         &self.jar
     }
 
+    /// Path to the 'javadoc' tool.
+    pub fn get_javadoc(&self) -> &Option<PathBuf> {
+        &self.javadoc
+    }
+
     /// Checks if all the tools have a registered path.
     /// If at least one of them is `None`, this method will
-    /// return `false`
+    /// return `false`.
     pub fn is_valid(&self) -> bool {
         self.java.is_some()
             && self.javac.is_some()
             && self.jar.is_some()
+            && self.javadoc.is_some()
+    }
+
+    /// Given a list of tool names, map them into a hashmap that contains the
+    /// name of the tool, pointing to a boolean that tells if the tool is available 
+    /// or not.
+    ///
+    /// # Examples
+    /// ```rust
+    /// // The 'java' tool is available, but 'javac' isn't.
+    /// let mut expected = HashMap::new();
+    /// expected.insert("java", true);
+    /// expected.insert("javac", false);
+    ///
+    /// assert_eq!(expected, java_home.check_required_tools(vec!["java", "javac"]))
+    /// ```
+    pub fn check_required_tools(&self, required_tools: &Vec<&'static str>) -> HashMap<&'static str, bool> {
+        let tools_mp = self.get_tools();
+        required_tools.iter()
+            .map(|tool_name| (tool_name.clone(), tools_mp.contains_key(tool_name)))
+            .collect()
     }
 
     /// This function returns a map containing the name of the tool as a
@@ -119,10 +143,19 @@ impl JavaHome {
         hm.insert("javac", &self.javac);
         hm.insert("java", &self.java);
         hm.insert("jar", &self.jar);
+        hm.insert("javadoc", &self.javadoc);
         hm
     }
 
+    /// Path pointing to the java home.
     pub fn get_java_home(&self) -> &PathBuf {
         &self.java_home
+    }
+
+    /// Checks if the tool for the corresponding name was
+    /// detected. If `false` is returned, this would mean that the
+    /// specified tool is not available.
+    pub fn has_tool(&self, tool_name: &str) -> bool {
+        self.get_tools().contains_key(tool_name)
     }
 }

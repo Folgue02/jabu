@@ -1,9 +1,7 @@
-mod task;
 mod deps_task_manager;
 mod list;
 
 pub use deps_task_manager::*;
-pub use task::*;
 pub use list::*;
 use crate::{tasks::{JabuTaskManager, JabuTask, TaskResult}, tools::JavaHome, config::{JabuConfig, JABU_FILE_NAME}};
 

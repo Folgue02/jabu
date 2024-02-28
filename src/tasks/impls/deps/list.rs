@@ -14,7 +14,7 @@ impl JabuTask for ListDepsTask {
             .map(|lib| lib.file_stem().unwrap().to_str().unwrap_or("-----").to_string())
             .collect();
 
-        Self::list_dependencies(dep_names, vec![]);
+        Self::list_dependencies(jabu_config, dep_names, vec![]);
        
         Ok(())
     }
@@ -26,7 +26,7 @@ impl JabuTask for ListDepsTask {
 }
 
 impl ListDepsTask {
-    fn list_dependencies(local_dependencies: Vec<String>, remote_dependencies: Vec<String>) {
+    fn list_dependencies(jabu_config: &JabuConfig, local_dependencies: Vec<String>, remote_dependencies: Vec<String>) {
         let mut table = prettytable::Table::new();
         table.add_row(
             Row::new(

@@ -2,10 +2,12 @@ mod java;
 mod jar;
 mod javac;
 mod javahome;
+mod javadoc;
 
 use std::path::PathBuf;
 
 pub use java::*;
+pub use javadoc::*;
 pub use jar::*;
 pub use javac::*;
 pub use javahome::*;

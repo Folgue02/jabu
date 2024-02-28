@@ -29,6 +29,15 @@ pub enum TaskError {
     /// some of the utilities*)
     InvalidJavaEnvironment(String),
 
+    /// Represents the lack of tools required for a task. (*i.e. the 'run' task
+    /// requires the 'javac' and 'java' tools to be available, if any of them aren't,
+    /// this variant will hold a map with the required tools and their status.
+    ///
+    /// ## Example
+    /// - 'java' => `true` (because it is available), 
+    /// - 'javac' => `false` (because it's not not available)
+    MissingRequiredTaskTools(HashMap<String, bool>),
+
     /// Signifies the failure of the execution of an external command.
     CommandFailed {
         command: String,
@@ -74,6 +83,13 @@ impl std::fmt::Display for TaskError {
         let msg = match self {
             Self::MissingJavaEnvironment => "No java environment could be found. (you can specify one with the environment variable 'JAVA_HOME'".to_string(),
             Self::InvalidJavaEnvironment(env) => format!("'{env}' as a java home is invalid (it might be missing some tools)"),
+            Self::MissingRequiredTaskTools(tool_map) => {
+                let body = tool_map.iter()
+                    .map(|(tool_name, availability)| format!("   {} : {}", tool_name, availability))
+                    .collect::<Vec<String>>()
+                    .join("\n");
+                format!("Missing required tools for the given task:\n{body}")
+            }
             Self::Generic(desc) => format!("Something went wrong: {desc}"),
             Self::IOError(io_error) => format!("An IO error has occurred: {io_error}"),
             Self::DependencyTaskFailed { task_name, description } => {
@@ -99,7 +115,6 @@ impl std::fmt::Display for TaskError {
                 format!("Invalid arguments:\n{error_list_compiled}")
             }
         };
-        // TODO: Write specified messages.
         write!(f, "{msg}")
     }
 }
@@ -225,7 +240,6 @@ impl GeneralTaskManager {
     }
 
     fn list_tasks(&self) {
-        // TODO: Change
         let mut table = prettytable::Table::new();
         table.set_format(*prettytable::format::consts::FORMAT_BORDERS_ONLY);
         table.add_row(
