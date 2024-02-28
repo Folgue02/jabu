@@ -127,14 +127,14 @@ impl JabuTaskManager {
             }
         };
 
-        
-        /* TODO: Remove me
-        if !java_home.is_valid() {
-            return Err(
-                TaskError::InvalidJavaEnvironment(java_home.get_java_home().to_string_lossy().to_string())
-            )
+        let required_tools = task.required_tools();
+        let required_tools_status = java_home.check_required_tools(&required_tools.to_vec());
+
+        // If any tool is missing
+        if required_tools_status.iter()
+            .any(|(_, availability)| !availability) {
+            return Err(TaskError::MissingRequiredTaskTools(required_tools_status))
         }
-        */
 
         for (task_name, task_args) in task.get_dependency_task_specs().specs {
             println!("=> Executing dependency task '{task_name}' with args '{task_args:?}'");

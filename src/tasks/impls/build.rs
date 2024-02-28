@@ -82,4 +82,8 @@ impl JabuTask for BuildJabuTask {
             Ok(())
         }
     }
+
+    fn required_tools(&self) -> &[&'static str] {
+        &["javac"]
+    }
 }

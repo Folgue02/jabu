@@ -52,8 +52,7 @@ impl TryFrom<PathBuf> for JavaHome {
     type Error = std::io::Error;
     fn try_from(home: PathBuf) -> Result<Self, Self::Error> {
         let java_path_bin = PathBuf::from(&home).join("bin");
-
-        let java_path = java_path_bin.join(JAVA_TOOL_NAME);
+let java_path = java_path_bin.join(JAVA_TOOL_NAME);
         let java = if_path_exists(java_path);
 
         let jar_path = java_path_bin.join(JAR_TOOL_NAME);
@@ -128,10 +127,17 @@ impl JavaHome {
     ///
     /// assert_eq!(expected, java_home.check_required_tools(vec!["java", "javac"]))
     /// ```
-    pub fn check_required_tools(&self, required_tools: &Vec<&'static str>) -> HashMap<&'static str, bool> {
+    ///
+    /// This method is usually used along the [`crate::tasks::JabuTask::required_tools`] method.
+    ///
+    /// ```
+    /// let task: Task = ...;
+    /// java_home.check_required_tools(task.required_tools());
+    /// ```
+    pub fn check_required_tools(&self, required_tools: &[&'static str]) -> HashMap<&'static str, bool> {
         let tools_mp = self.get_tools();
         required_tools.iter()
-            .map(|tool_name| (tool_name.clone(), tools_mp.contains_key(tool_name)))
+            .map(|tool_name| (*tool_name, tools_mp.contains_key(tool_name)))
             .collect()
     }
 

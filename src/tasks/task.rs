@@ -1,21 +1,14 @@
 use crate::args::parser::InvalidArgError;
-use prettytable::{Table, Row, Attr, Cell, color, format::FormatBuilder};
-use crate::{
-    tasks::{
-        impls::{
-            NewProjectTask,
-            VersionTask
-        },
-        JabuTaskManager,
-        JabuTask
+use prettytable::{Row, Attr, Cell, color};
+use crate::tasks::{
+    impls::{
+        NewProjectTask,
+        VersionTask
     },
-    tools::JavaHome,
-    config::{
-        JabuConfig,
-        JABU_FILE_NAME
-    }
+    JabuTaskManager,
+    JabuTask
 };
-use std::{io::Write, collections::{HashMap, HashSet}, path::PathBuf};
+use std::collections::{HashMap, HashSet};
 
 pub type TaskResult = Result<(), TaskError>;
 
@@ -27,16 +20,22 @@ pub enum TaskError {
 
     /// The java environment that has been found is not valid. (*it may be missing
     /// some of the utilities*)
+    ///
+    /// # See
+    /// - [`TaskError::MissingRequiredTaskTools`]
     InvalidJavaEnvironment(String),
 
     /// Represents the lack of tools required for a task. (*i.e. the 'run' task
     /// requires the 'javac' and 'java' tools to be available, if any of them aren't,
     /// this variant will hold a map with the required tools and their status.
     ///
-    /// ## Example
-    /// - 'java' => `true` (because it is available), 
+    /// # Example
+    /// - 'java'  => `true` (because it is available), 
     /// - 'javac' => `false` (because it's not not available)
-    MissingRequiredTaskTools(HashMap<String, bool>),
+    ///
+    /// # See
+    /// - [`crate::tools::JavaHome::check_required_tools`]
+    MissingRequiredTaskTools(HashMap<&'static str, bool>),
 
     /// Signifies the failure of the execution of an external command.
     CommandFailed {
@@ -84,6 +83,7 @@ impl std::fmt::Display for TaskError {
             Self::MissingJavaEnvironment => "No java environment could be found. (you can specify one with the environment variable 'JAVA_HOME'".to_string(),
             Self::InvalidJavaEnvironment(env) => format!("'{env}' as a java home is invalid (it might be missing some tools)"),
             Self::MissingRequiredTaskTools(tool_map) => {
+                // TODO: Add colors / Put it in a table.
                 let body = tool_map.iter()
                     .map(|(tool_name, availability)| format!("   {} : {}", tool_name, availability))
                     .collect::<Vec<String>>()

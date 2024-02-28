@@ -83,6 +83,10 @@ impl JabuTask for JarTask {
 
         JabuTaskDependencySpec::new(specs)
     }
+
+    fn required_tools(&self) -> &[&'static str] {
+        &["javac", "jar"]
+    }
 }
 
 impl JarTask {

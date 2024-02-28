@@ -78,4 +78,8 @@ impl JabuTask for Run {
         specs.insert("build".to_string(), Vec::new());
         JabuTaskDependencySpec::new(specs)
     }
+
+    fn required_tools(&self) -> &[&'static str] {
+        &["java", "javac"]
+    }
 }
