@@ -26,6 +26,19 @@ impl Into<String> for JavaVisibilityLevel {
     }
 }
 
+impl TryFrom<&str> for JavaVisibilityLevel {
+    type Error = ();
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        let value = value.to_lowercase();
+        match value.as_str() {
+            "private" => Ok(Self::Private),
+            "public" => Ok(Self::Public),
+            "protected" => Ok(Self::Protected),
+            _ => Err(())
+        }
+    }
+}
+
 /// API for generating configurations for executing 
 /// the `javadoc` cli utility.
 #[derive(Debug, PartialEq)]
@@ -51,8 +64,6 @@ impl Into<Vec<String>> for JavadocToolConfig {
         if let Some(java_config) = self.java_config {
             result.push("--source".to_string());
             result.push(java_config.source.to_string());
-            result.push("--release".to_string());
-            result.push(java_config.target.to_string());
         }
 
         result.push(format!("-{}", <JavaVisibilityLevel as Into<String>>::into(self.visibility_level)));

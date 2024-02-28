@@ -17,16 +17,12 @@ impl JabuTask for BuildJabuTask {
 
     fn execute(
         &self,
-        args: Vec<String>,
+        _: Vec<String>,
         jabu_config: &crate::config::JabuConfig,
         java_home: &JavaHome,
     ) -> crate::tasks::TaskResult {
         
-        let sources = crate::utils::walkdir_find(
-            &jabu_config.fs_schema.source,
-            |entry| entry.extension().unwrap_or_default() == "java",
-            &[FSNodeType::File]
-        );
+        let sources = jabu_config.fs_schema.get_java_sources();
 
         println!("Sources to compile: ");
         sources

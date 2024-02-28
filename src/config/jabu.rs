@@ -168,6 +168,13 @@ impl FsSchema {
             .to_string()
     }
 
+    pub fn target_docs(&self) -> String {
+        PathBuf::from(&self.target)
+            .join("docs")
+            .to_string_lossy()
+            .to_string()
+    }
+
     /// Returns a collection of absolute paths pointing to 
     /// the jar files inside the `lib` directory. This method uses the
     /// [`crate::utils::walkdir_find`] method, which will return an empty 
@@ -182,6 +189,25 @@ impl FsSchema {
         crate::utils::walkdir_find(
             &self.lib,
             |entry| entry.extension().map_or(false, |ext| ext == "jar"),
+            &[FSNodeType::File]
+        )
+    }
+
+    
+    /// Returns a collection of absolute paths pointing to the java sources
+    /// in the `sources` directory. This method uses a call to the 
+    /// [`crate::utils::walkdir_find`] method, which will return an empty 
+    /// vector if it couldn't read the specified directory.
+    ///
+    /// ***NOTE***: This search is recursive, so it will look for java files
+    /// recursively.
+    ///
+    /// # See
+    /// - [`crate::utils::walkdir_find`]
+    pub fn get_java_sources(&self) -> Vec<PathBuf> {
+        crate::utils::walkdir_find(
+            &self.source,
+            |entry| entry.extension().unwrap_or_default() == "java",
             &[FSNodeType::File]
         )
     }

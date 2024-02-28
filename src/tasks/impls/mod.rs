@@ -6,8 +6,9 @@ mod version;
 mod scripts;
 mod clean;
 mod jar;
-pub mod deps;
+mod javadoc;
 
+pub mod deps;
 pub use run::*;
 pub use new::*;
 pub use display_info::*;
@@ -16,3 +17,4 @@ pub use version::*;
 pub use scripts::*;
 pub use clean::*;
 pub use jar::*;
+pub use javadoc::*;

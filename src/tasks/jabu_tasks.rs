@@ -15,6 +15,7 @@ use super::{
         ScriptsTask,
         CleanTask,
         JarTask,
+        JavadocTask,
     }
 };
 
@@ -80,6 +81,7 @@ impl JabuTaskManager {
         tasks.insert("clean".to_string(), Box::new(CleanTask::default()));
         tasks.insert("jar".to_string(), Box::new(JarTask::default()));
         tasks.insert("deps".to_string(), Box::new(deps::DepsSubtask::default()));
+        tasks.insert("javadoc".to_string(), Box::new(JavadocTask::default()));
         Self {
             tasks
         }
@@ -114,37 +116,22 @@ impl JabuTaskManager {
     		return Err(TaskError::NoSuchTask(task_name.to_string()));
     	};
 
-        let jabu_config = match JabuConfig::try_from(PathBuf::from(directory).join(JABU_FILE_NAME)) {
-            Ok(cfg) => cfg,
-            Err(e) => return Err(TaskError::InvalidConfig(Box::new(e)))
-        };
-
-        let java_home = match JavaHome::new() {
-            Ok(java_home) => java_home,
-            Err(_) => {
-                eprintln!("Couldn't find a java installation path (it can be specified with the $JAVA_HOME variable)");
-                return Err(TaskError::MissingJavaEnvironment);
-            }
-        };
+        let jabu_config = JabuConfig::try_from(PathBuf::from(directory).join(JABU_FILE_NAME))?;
+        let java_home = JavaHome::new()?;
 
         let required_tools = task.required_tools();
         let required_tools_status = java_home.check_required_tools(&required_tools.to_vec());
 
         // If any tool is missing
         if required_tools_status.iter()
-            .any(|(_, availability)| !availability) {
+            .any(|(_, available)| !available) {
             return Err(TaskError::MissingRequiredTaskTools(required_tools_status))
         }
 
         for (task_name, task_args) in task.get_dependency_task_specs().specs {
             println!("=> Executing dependency task '{task_name}' with args '{task_args:?}'");
             if let Some(dep_task) = self.get_task(&task_name) {
-                match dep_task.execute(task_args, &jabu_config, &java_home) {
-                    Ok(_) => (),
-                    Err(e) => {
-                        return Err(TaskError::DependencyTaskFailed { task_name: task_name.clone(), description: e.to_string() })
-                    }
-                }
+                dep_task.execute(task_args, &jabu_config, &java_home)?
             } else {
                 return Err(TaskError::DependencyTaskDoesntExist(task_name.clone()));
             }
