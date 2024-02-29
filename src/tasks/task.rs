@@ -3,7 +3,8 @@ use prettytable::{Row, Attr, Cell, color};
 use crate::tasks::{
     impls::{
         NewProjectTask,
-        VersionTask
+        VersionTask,
+        HealthCheckTask,
     },
     JabuTaskManager,
     JabuTask
@@ -151,6 +152,7 @@ impl TaskManager {
         let mut tasks: HashMap<String, Box<dyn Task>> = HashMap::new();
         tasks.insert("new".to_string(), Box::new(NewProjectTask {}));
         tasks.insert("version".to_string(), Box::new(VersionTask::default()));
+        tasks.insert("health".to_string(), Box::new(HealthCheckTask::default()));
         Self { tasks }
     }
 

@@ -1,4 +1,5 @@
 use std::{collections::HashMap, path::PathBuf};
+use prettytable::{Row, Attr, Cell, color};
 
 const JAVA_TOOL_NAME: &'static str = if cfg!(windows) {
     "java.exe"
@@ -163,5 +164,56 @@ impl JavaHome {
     /// specified tool is not available.
     pub fn has_tool(&self, tool_name: &str) -> bool {
         self.get_tools().contains_key(tool_name)
+    }
+
+    /// Generates a table containing two columns, one with the name 
+    /// of the tool, and the other displaying if the tool is available/found
+    /// or not.
+    ///
+    /// # Example
+    /// ```rust
+    /// let java_home = JavaHome::new()?;
+    /// 
+    /// println!("{}", java_home.print_tool_availability_table();
+    /// // |Tool name | Availability |
+    /// // |----------|--------------|
+    /// // | java     | Available    |
+    /// // | javac    | Not available|
+    /// // ...
+    /// ```
+    pub fn print_tool_availability_table(&self) {
+        let mut table = prettytable::Table::new();
+
+        table.set_format(*prettytable::format::consts::FORMAT_BORDERS_ONLY);
+        table.set_titles(
+            Row::new(
+                vec![
+                    Cell::new("Tool name"),
+                    Cell::new("Availability")
+                ]
+            )
+        );
+
+        self.get_tools().iter()
+            .map(|(tool_name, path)| {
+                Row::new(
+                    vec![
+                        Cell::new(tool_name)
+                            .with_style(Attr::ForegroundColor(color::BLUE)),
+                        if path.is_some() {
+                            Cell::new("Available")
+                                .with_style(Attr::ForegroundColor(color::GREEN))
+                                .with_style(Attr::Bold)
+                        } else {
+                            Cell::new("Not available")
+                                .with_style(Attr::BackgroundColor(color::RED))
+                                .with_style(Attr::Bold)
+                        }
+                    ]
+                )
+            })
+            .for_each(|row| {table.add_row(row);});
+
+        table.printstd();
     }
 }
