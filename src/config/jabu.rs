@@ -168,9 +168,20 @@ impl FsSchema {
             .to_string()
     }
 
+    /// Returns the path for the generated javadoc inside of the target
+    /// directory.
     pub fn target_docs(&self) -> String {
         PathBuf::from(&self.target)
             .join("docs")
+            .to_string_lossy()
+            .to_string()
+    }
+
+    /// Returns the path for the generated self-contained applications 
+    /// inside of the target directory.
+    pub fn target_self_contained(&self) -> String {
+        PathBuf::from(&self.target)
+            .join("self-contained")
             .to_string_lossy()
             .to_string()
     }

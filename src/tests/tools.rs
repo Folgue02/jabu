@@ -171,7 +171,6 @@ mod javadoc {
             "src/main/App.java", "src/main/registry/Person.java",
             "-d", "target/docs",
             "--source", "17",
-            "--release", "17",
             "-private"
         ];
         let input = JavadocToolConfig::new(
@@ -188,7 +187,6 @@ mod javadoc {
         let expected = vec![
             "src/main/App.java", "src/main/registry/Person.java",
             "--source", "17",
-            "--release", "17",
             "-private"
         ];
         let input = JavadocToolConfig::new(
@@ -213,5 +211,31 @@ mod javadoc {
             JavaVisibilityLevel::Private
         );
         assert_eq!(expected, input.into_args());
+    }
+}
+
+mod jpackage {
+    use std::path::PathBuf;
+    use crate::tools::JPackageToolConfig;
+
+    #[test]
+    fn gen_simple_config() {
+        let expected = vec![
+            "--input", "target/bin",
+            "--main-jar", "application.jar",
+            "--main-class", "me.user.app.App",
+            "--name", "TestApp",
+            "--output", "target/native",
+            "--type", "app-image"
+        ];
+        let input = JPackageToolConfig::new(
+            PathBuf::from("target/bin/application.jar"),
+            "TestApp".to_string(),
+            "me.user.app.App".to_string(),
+            "target/native".to_string(),
+            "app-image".to_string()
+        );
+
+        assert_eq!(expected, input.try_into_args().unwrap())
     }
 }

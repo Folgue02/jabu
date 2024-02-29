@@ -16,6 +16,7 @@ use super::{
         CleanTask,
         JarTask,
         JavadocTask,
+        JPackageTask,
     }
 };
 
@@ -82,6 +83,7 @@ impl JabuTaskManager {
         tasks.insert("jar".to_string(), Box::new(JarTask::default()));
         tasks.insert("deps".to_string(), Box::new(deps::DepsSubtask::default()));
         tasks.insert("javadoc".to_string(), Box::new(JavadocTask::default()));
+        tasks.insert("jpackage".to_string(), Box::new(JPackageTask::default()));
         Self {
             tasks
         }

@@ -25,6 +25,12 @@ const JAVADOC_TOOL_NAME: &'static str = if cfg!(windows) {
     "javadoc"
 };
 
+const JPACKAGE_TOOL_NAME: &'static str = if cfg!(windows) {
+    "jpackage.exe"
+} else {
+    "jpackage"
+};
+
 /// Structure that holds the paths to the different tools provided 
 /// by the jdk. This structure might not contain the paths for
 /// all the existing tools, or not even for one tool.
@@ -37,7 +43,8 @@ pub struct JavaHome {
     java: Option<PathBuf>,
     javac: Option<PathBuf>,
     jar: Option<PathBuf>,
-    javadoc: Option<PathBuf>
+    javadoc: Option<PathBuf>,
+    jpackage: Option<PathBuf>
 }
 
 /// Checks if the given path points to a file, if it exists, it
@@ -65,12 +72,16 @@ let java_path = java_path_bin.join(JAVA_TOOL_NAME);
         let javac_path = java_path_bin.join(JAVAC_TOOL_NAME);
         let javac = if_path_exists(javac_path); 
 
+        let jpackage_path = java_path_bin.join(JPACKAGE_TOOL_NAME);
+        let jpackage = if_path_exists(jpackage_path);
+
         Ok(Self {
             java_home: home,
             java,
             jar,
             javac,
-            javadoc
+            javadoc,
+            jpackage
         })
     }
 }
@@ -103,6 +114,11 @@ impl JavaHome {
     /// Path to the 'javadoc' tool.
     pub fn get_javadoc(&self) -> &Option<PathBuf> {
         &self.javadoc
+    }
+
+    /// Path to the 'javadoc' tool.
+    pub fn get_jpackage(&self) -> &Option<PathBuf> {
+        &self.jpackage
     }
 
     /// Checks if all the tools have a registered path.
@@ -151,6 +167,7 @@ impl JavaHome {
         hm.insert("java", &self.java);
         hm.insert("jar", &self.jar);
         hm.insert("javadoc", &self.javadoc);
+        hm.insert("jpackage", &self.jpackage);
         hm
     }
 
@@ -206,7 +223,7 @@ impl JavaHome {
                                 .with_style(Attr::Bold)
                         } else {
                             Cell::new("Not available")
-                                .with_style(Attr::BackgroundColor(color::RED))
+                                .with_style(Attr::ForegroundColor(color::RED))
                                 .with_style(Attr::Bold)
                         }
                     ]

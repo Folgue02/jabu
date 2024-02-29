@@ -8,6 +8,7 @@ mod clean;
 mod jar;
 mod javadoc;
 mod health;
+mod jpackage;
 
 pub mod deps;
 pub use run::*;
@@ -20,3 +21,4 @@ pub use clean::*;
 pub use jar::*;
 pub use javadoc::*;
 pub use health::*;
+pub use jpackage::*;

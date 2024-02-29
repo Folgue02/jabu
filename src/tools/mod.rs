@@ -3,6 +3,7 @@ mod jar;
 mod javac;
 mod javahome;
 mod javadoc;
+mod jpackage;
 
 use std::path::PathBuf;
 
@@ -11,6 +12,7 @@ pub use javadoc::*;
 pub use jar::*;
 pub use javac::*;
 pub use javahome::*;
+pub use jpackage::*;
 
 
 /// Returns the java home, if `$JAVA_HOME` is defined,
