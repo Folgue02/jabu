@@ -86,9 +86,9 @@ impl TryInto<Vec<String>> for JPackageToolConfig {
             args.push(output_type);
         } else {
             args.push(
-                if cfg!(windows) {
+                if cfg!(target_os = "windows") {
                     "exe"
-                } else if cfg!(linux) {
+                } else if cfg!(target_os = "linux") {
                     "app-image"
                 } else {
                     // MacOS has 'dmg', but there could be other

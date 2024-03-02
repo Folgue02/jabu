@@ -233,7 +233,7 @@ impl GeneralTaskManager {
        }
 
         if let Some(_) = self.jabu_task_manager.get_task(task_name) {
-            self.jabu_task_manager.execute(task_name, args, directory)
+            self.jabu_task_manager.execute(task_name, &args, directory)
         } else if let Some(_) = self.task_manager.get_task(task_name) {
             self.task_manager.execute(task_name, args, directory)
         } else {

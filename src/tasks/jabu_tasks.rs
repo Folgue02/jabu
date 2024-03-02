@@ -111,7 +111,7 @@ impl JabuTaskManager {
     	self.tasks.get(task_name)
     }
 
-    pub fn execute(&self, task_name: &str, args: Vec<String>, directory: &str) -> TaskResult {
+    pub fn execute(&self, task_name: &str, args: &Vec<String>, directory: &str) -> TaskResult {
     	let task = if let Some(task) = self.get_task(task_name) {
     		task
     	} else {
@@ -132,13 +132,14 @@ impl JabuTaskManager {
 
         for (task_name, task_args) in task.get_dependency_task_specs().specs {
             println!("=> Executing dependency task '{task_name}' with args '{task_args:?}'");
-            if let Some(dep_task) = self.get_task(&task_name) {
-                dep_task.execute(task_args, &jabu_config, &java_home)?
+
+            if self.tasks.contains_key(&task_name) {
+                self.execute(&task_name, args, directory)?
             } else {
                 return Err(TaskError::DependencyTaskDoesntExist(task_name.clone()));
             }
         }
 
-    	task.execute(args, &jabu_config, &java_home)
+    	task.execute(args.clone(), &jabu_config, &java_home)
     }
 }
