@@ -1,10 +1,19 @@
-use crate::{config::JabuConfig, tools::JavaHome, tasks::{TaskError, JabuTask, TaskResult}};
+use crate::{
+    config::JabuConfig,
+    tools::JavaHome,
+    args::parser::ParsedArguments,
+    tasks::{
+        TaskError,
+        JabuTask,
+        TaskResult
+    }
+};
 
 #[derive(Default)]
 pub struct CleanTask;
 
 impl JabuTask for CleanTask {
-    fn execute(&self, _: Vec<String>, jabu_config: &JabuConfig, _: &JavaHome) -> TaskResult {
+    fn execute(&self, _: Vec<String>, _: Option<ParsedArguments>, jabu_config: &JabuConfig, _: &JavaHome) -> TaskResult {
         match std::fs::remove_dir_all(&jabu_config.fs_schema.target) {
             Ok(_) => (),
             Err(e) => {

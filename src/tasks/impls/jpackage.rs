@@ -4,17 +4,12 @@ use crate::{
             Options,
             ParOptionBuilder,
         },
-        parser::{
-            ParsedArguments,
-            InvalidArgError
-        },
+        parser::ParsedArguments
     },
     config::JabuConfig,
     tools::{
         JavaHome,
         JPackageToolConfig,
-        JavadocToolConfig,
-        JavaVisibilityLevel,
     },
     tasks::{
         JabuTaskDependencySpec,
@@ -35,11 +30,8 @@ impl JabuTask for JPackageTask {
         "Generates a self-contained application of the project.".to_string()
     }
 
-    fn execute(&self, args: Vec<String>, jabu_config: &JabuConfig, java_home: &JavaHome) -> TaskResult {
-        let parsed_args = match ParsedArguments::new_with_options(args, &Self::get_options()) {
-            Ok(args) => args,
-            Err(e) => return Err(TaskError::InvalidArguments(e)),
-        };
+    fn execute(&self, args: Vec<String>, parsed_args: Option<ParsedArguments>, jabu_config: &JabuConfig, java_home: &JavaHome) -> TaskResult {
+        let parsed_args = parsed_args.unwrap();
         let main_class = if let Some(main_class) = jabu_config.properties.get("Main-Class") {
             main_class
         } else {
@@ -95,10 +87,8 @@ impl JabuTask for JPackageTask {
 
         JabuTaskDependencySpec::new(spec)
     }
-}
 
-impl JPackageTask {
-    fn get_options() -> Options {
+    fn options(&self) -> Option<Options> {
         let mut ops = Options::default();
         ops.add_option(
             ParOptionBuilder::default()
@@ -110,6 +100,6 @@ impl JPackageTask {
                 .build()
         );
 
-        ops
+        Some(ops)
     }
 }

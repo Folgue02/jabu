@@ -31,11 +31,12 @@ impl JabuTask for JavadocTask {
         "Generates the project's javadoc.".to_string()
     }
 
-    fn execute(&self, args: Vec<String>, jabu_config: &JabuConfig, java_home: &JavaHome) -> TaskResult {
-        let parsed_args = match ParsedArguments::new_with_options(args, &Self::get_options()) {
-            Ok(args) => args,
-            Err(e) => return Err(TaskError::InvalidArguments(e))
-        };
+    fn execute(&self,
+               args: Vec<String>,
+               parsed_args: Option<ParsedArguments>,
+               jabu_config: &JabuConfig,
+               java_home: &JavaHome) -> TaskResult {
+        let parsed_args =  parsed_args.unwrap();
         let sources = jabu_config.fs_schema.get_java_sources();
         let visibility_level = match JavaVisibilityLevel::try_from(
             parsed_args.get_option_value("visibility").unwrap().as_ref().unwrap().as_ref()) {
@@ -109,10 +110,8 @@ impl JabuTask for JavadocTask {
     fn required_tools(&self) -> &[&'static str] {
         &["javadoc"]
     }
-}
 
-impl JavadocTask {
-    fn get_options() -> Options {
+    fn options(&self) -> Option<Options> {
         let mut options = Options::default();
         options.add_option(
             ParOptionBuilder::default()
@@ -123,7 +122,6 @@ impl JavadocTask {
                 .build()
         );
 
-        options
+        Some(options)
     }
 }
-

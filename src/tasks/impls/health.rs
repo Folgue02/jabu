@@ -1,4 +1,5 @@
 use crate::{
+    args::parser::ParsedArguments,
     tools::JavaHome,
     tasks::{
         Task,
@@ -10,7 +11,7 @@ use crate::{
 pub struct HealthCheckTask;
 
 impl Task for HealthCheckTask {
-    fn execute(&self, _: Vec<String>) -> TaskResult {
+    fn execute(&self, _: Vec<String>, _: Option<ParsedArguments>) -> TaskResult {
         let java_home = JavaHome::new()?;
 
         java_home.get_tools();

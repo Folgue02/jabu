@@ -1,10 +1,8 @@
-use walkdir::WalkDir;
-
 use crate::{
     utils::FSNodeType,
-    config::JavaConfig,
     tasks::JabuTask,
     tools::{JavaHome, JavacConfig}, utils,
+    args::parser::ParsedArguments,
 };
 
 #[derive(Default)]
@@ -18,6 +16,7 @@ impl JabuTask for BuildJabuTask {
     fn execute(
         &self,
         _: Vec<String>,
+        _: Option<ParsedArguments>,
         jabu_config: &crate::config::JabuConfig,
         java_home: &JavaHome,
     ) -> crate::tasks::TaskResult {

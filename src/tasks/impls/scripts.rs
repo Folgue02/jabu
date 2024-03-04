@@ -1,13 +1,18 @@
 use crate::{tasks::JabuTask, args::{parser::ParsedArguments, options::{Options, ParOptionBuilder}}, config::JabuConfig};
-use std::{ffi::OsStr, path::{PathBuf, Path}, collections::HashMap};
+use std::{path::{PathBuf, Path}, collections::HashMap};
 use pyo3::prelude::*;
 
 #[derive(Default)]
 pub struct ScriptsTask;
 
 impl JabuTask for ScriptsTask {
-    fn execute(&self, args: Vec<String>, jabu_config: &crate::config::JabuConfig, java_home: &crate::tools::JavaHome) -> crate::tasks::TaskResult {
-        let parsed_arguments = ParsedArguments::new_with_options(args, &ScriptsTask::get_options()).unwrap();
+    fn execute(
+        &self,
+        args: Vec<String>,
+        parsed_args: Option<ParsedArguments>,
+        jabu_config: &crate::config::JabuConfig,
+        java_home: &crate::tools::JavaHome) -> crate::tasks::TaskResult {
+        let parsed_arguments = parsed_args.unwrap();
         let script_paths = ScriptsTask::get_scripts(jabu_config);
         let mut results = HashMap::new();
 
@@ -87,6 +92,20 @@ impl JabuTask for ScriptsTask {
     fn description(&self) -> String {
         "Manages the project's scripts.".to_string()
     }
+
+    fn options(&self) -> Option<Options> {
+        let mut options = Options::default();
+        options.add_option(
+            ParOptionBuilder::default()
+                .name("list")
+                .short('l')
+                .has_arg(false)
+                .description("Lists all available tasks of the project.")
+                .build()
+        );
+
+        Some(options)
+    }
 }
 
 impl ScriptsTask {
@@ -115,22 +134,6 @@ impl ScriptsTask {
             .map(|e| e.path().to_path_buf())
             .filter(|e| e.extension().unwrap_or_default() == "py")
             .collect::<Vec<PathBuf>>()
-    }
-    
-    /// Returns the options for the argument parsing done by the the
-    /// `ScriptsTask`.
-    fn get_options() -> Options {
-        let mut options = Options::default();
-        options.add_option(
-            ParOptionBuilder::default()
-                .name("list")
-                .short('l')
-                .has_arg(false)
-                .description("Lists all available tasks of the project.")
-                .build()
-        );
-
-        options
     }
 }
 

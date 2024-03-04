@@ -11,44 +11,14 @@ use std::{collections::HashSet, path::Path};
 #[derive(Debug, Default)]
 pub struct NewProjectTask;
 
-impl NewProjectTask {
-    fn get_options() -> Options {
-        let mut options = Options::default();
-        options.add_option(
-            ParOptionBuilder::default()
-                .name("name")
-                .short('n')
-                .description("Name of the new project.")
-                .required(true)
-                .has_arg(true)
-                .build(),
-        );
-
-        options.add_option(
-            ParOptionBuilder::default()
-                .name("project-type")
-                .short('t')
-                .has_arg(true)
-                .description("Defines the type of project to be created.")
-                .default_value("binary".to_string())
-                .build(),
-        );
-
-        options
-    }
-}
-
 impl Task for NewProjectTask {
     fn description(&self) -> String {
         "Creates a new project.".to_string()
     }
 
-    fn execute(&self, args: Vec<String>) -> TaskResult {
-        let parsed_args =
-            match ParsedArguments::new_with_options(args, &NewProjectTask::get_options()) {
-                Ok(p_args) => p_args,
-                Err(e) => return Err(TaskError::InvalidArguments(e)),
-            };
+    fn execute(&self, args: Vec<String>, parsed_args: Option<ParsedArguments>) -> TaskResult {
+        // Safe to unwrap, since the trait method `Task::options` returns `Some()`
+        let parsed_args = parsed_args.unwrap();
 
         // Safely unwrap since if this options were missing it would have been caught
         // while parsing with the options.
@@ -104,5 +74,30 @@ impl Task for NewProjectTask {
             }
             Err(e) => Err(TaskError::IOError(e)),
         }
+    }
+
+    fn options(&self) -> Option<Options> {
+        let mut options = Options::default();
+        options.add_option(
+            ParOptionBuilder::default()
+                .name("name")
+                .short('n')
+                .description("Name of the new project.")
+                .required(true)
+                .has_arg(true)
+                .build(),
+        );
+
+        options.add_option(
+            ParOptionBuilder::default()
+                .name("project-type")
+                .short('t')
+                .has_arg(true)
+                .description("Defines the type of project to be created.")
+                .default_value("binary".to_string())
+                .build(),
+        );
+
+        Some(options)
     }
 }

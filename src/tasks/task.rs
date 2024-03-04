@@ -1,4 +1,7 @@
-use crate::args::parser::InvalidArgError;
+use crate::args::{
+    parser::{InvalidArgError, ParsedArguments},
+    options::Options,
+};
 use prettytable::{Row, Attr, Cell, color};
 use crate::tasks::{
     impls::{
@@ -78,6 +81,12 @@ impl From<std::io::Error> for TaskError {
     }
 }
 
+impl From<HashSet<InvalidArgError>> for TaskError {
+    fn from(value: HashSet<InvalidArgError>) -> Self {
+        Self::InvalidArguments(value)
+    }
+}
+
 impl std::fmt::Display for TaskError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let msg = match self {
@@ -129,7 +138,18 @@ pub trait Task: std::fmt::Debug {
     fn description(&self) -> String;
 
     /// Executes the task with the given arguments.
-    fn execute(&self, args: Vec<String>) -> TaskResult;
+    fn execute(&self, args: Vec<String>, parsed_options: Option<ParsedArguments>) -> TaskResult;
+
+    /// Returns the options used by the task. If the task doesn't use 
+    /// options, this method should return `None`.
+    /// 
+    /// # See
+    /// * [`crate::args::options::Options`]
+    ///
+    /// ***NOTE***: By default, this trait method will return `None`.
+    fn options(&self) -> Option<Options> {
+        None
+    }
 }
 
 #[derive(Debug)]
@@ -147,7 +167,10 @@ impl Default for TaskManager {
 
 impl TaskManager {
     /// Creates the default task manager for the top level tasks 
-    /// (*the main tasks available for jabu such as `new` or `version`.
+    /// (*the main tasks available for jabu such as `new` or `version`*). 
+    ///
+    /// This is different from just using the [`Default::default()`] trait method, 
+    /// which would just return an empty task manager.
     pub fn top_level_default() -> Self {
         let mut tasks: HashMap<String, Box<dyn Task>> = HashMap::new();
         tasks.insert("new".to_string(), Box::new(NewProjectTask {}));
@@ -156,8 +179,10 @@ impl TaskManager {
         Self { tasks }
     }
 
+    /// Registers a task in the task manager. If there already is task with the given name, 
+    /// this method will return `false`, if the task is added otherwise, `true`.
     pub fn register_task(&mut self, task_name: &str, new_task: Box<dyn Task>) -> bool {
-        if self.contains_task_with_name(task_name) {
+        if self.get_task(task_name).is_some() {
             false
         } else {
             self.tasks.insert(task_name.to_string(), new_task);
@@ -165,18 +190,22 @@ impl TaskManager {
         }
     }
 
-    pub fn contains_task_with_name(&self, task_name: &str) -> bool {
-        self.tasks.iter().any(|(t_name, _)| task_name == t_name)
-    }
-
+    /// Removes a task with the given name and returns it. If there was no
+    /// task with such name, `None` is returned.
     pub fn remove(&mut self, task_name: &str) -> Option<Box<dyn Task>> {
         self.tasks.remove(task_name)
     }
 
+    /// Returns a task with the given name, if the task doesn't exist, 
+    /// `None` will be returned.
     pub fn get_task(&self, task_name: &str) -> Option<&Box<dyn Task>> {
         self.tasks.get(task_name)
     }
 
+    /// Executes the task with the given name, and passing its args. If there is no task
+    /// with the given name, this method will return [`TaskError::NoSuchTask`]. 
+    /// Any other variant of [`TaskError`] is provided by the execution of the task 
+    /// itself.
     pub fn execute(&self, task_name: &str, args: Vec<String>, directory: &str) -> TaskResult {
         let task = if let Some(task) = self.get_task(task_name) {
             task
@@ -184,7 +213,13 @@ impl TaskManager {
             return Err(TaskError::NoSuchTask(task_name.to_string()));
         };
 
-        task.execute(args)
+        let parsed_args = if let Some(options) = task.options() {
+            Some(ParsedArguments::new_with_options(args.clone(), &options)?)
+        } else {
+            None
+        };
+
+        task.execute(args, parsed_args)
     }
 }
 
@@ -218,7 +253,7 @@ impl GeneralTaskManager {
     /// name.
     pub fn contains_task_with_name(&self, task_name: &str) -> bool {
         self.jabu_task_manager.contains_task_with_name(task_name)
-            || self.task_manager.contains_task_with_name(task_name)
+            || self.task_manager.get_task(task_name).is_some()
             || task_name == "help"
     }
 

@@ -3,7 +3,7 @@ use std::{
     collections::HashMap
 };
 use crate::{
-    utils::{walkdir_find, FSNodeType, exec_cmd},
+    utils::{FSNodeType, exec_cmd},
     config::{
         JabuConfig,
         java::JarManifest
@@ -14,7 +14,8 @@ use crate::{
         JabuTaskDependencySpec,
         JabuTask, 
         TaskResult
-    }
+    },
+    args::parser::ParsedArguments
 };
 
 #[derive(Default)]
@@ -25,7 +26,11 @@ impl JabuTask for JarTask {
         "Creates a jar containing the compiled classes of the project.".to_string()
     }
 
-    fn execute(&self, _: Vec<String>, jabu_config: &JabuConfig, java_home: &JavaHome) -> TaskResult {
+    fn execute(&self,
+                _: Vec<String>,
+                _: Option<ParsedArguments>,
+                jabu_config: &JabuConfig,
+                java_home: &JavaHome) -> TaskResult {
         let mut jar_tool_config = JarToolConfig::new(
             Path::new(&jabu_config.fs_schema.target_bin())
                 .join(jabu_config.display_name() + ".jar")

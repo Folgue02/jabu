@@ -1,40 +1,20 @@
-use crate::tasks::{Task, JabuTask, JabuTaskDependencySpec};
+use crate::tasks::{JabuTask, JabuTaskDependencySpec};
 use crate::config::JabuConfig;
 use crate::tools::{JavaHome, JavaToolConfig, JavaExecTarget};
 use std::collections::HashMap;
-use crate::args::options::{Options, ParOptionBuilder, ParOption};
+use crate::args::options::{Options, ParOptionBuilder};
 use crate::args::parser::ParsedArguments;
 
 #[derive(Debug, Default)]
-pub struct Run {
-}
-
-impl Run {
-    fn get_options() -> Options {
-        let mut options = Options::default();
-        options.add_option(
-            ParOptionBuilder::default()
-                .name("main-class")
-                .short('c')
-                .required(false)
-                .build()
-        );
-        options
-    }
-}
+pub struct Run;
 
 impl JabuTask for Run {
     fn description(&self) -> String {
         "Runs the current project".to_string()
     }
 
-    fn execute(&self, args: Vec<String>, jabu_config: &JabuConfig, java_home: &JavaHome) -> crate::tasks::TaskResult {
-        let parsed_args = 
-            match ParsedArguments::new_with_options(args, &Run::get_options()) {
-                Ok(p) => p,
-                Err(e) => return Err(crate::tasks::TaskError::InvalidArguments(e))
-            };
-
+    fn execute(&self, _: Vec<String>, parsed_args: Option<ParsedArguments>, jabu_config: &JabuConfig, java_home: &JavaHome) -> crate::tasks::TaskResult {
+        let parsed_args = parsed_args.unwrap();
         
         let main_class: &str = if let Some(Some(main_class)) = parsed_args.get_option_value("main-class") {
             main_class
@@ -81,5 +61,19 @@ impl JabuTask for Run {
 
     fn required_tools(&self) -> &[&'static str] {
         &["java", "javac"]
+    }
+
+    fn options(&self) -> Option<Options> {
+        let mut options = Options::default();
+        options.add_option(
+            ParOptionBuilder::default()
+                .name("main-class")
+                .short('c')
+                .description("Specify which class to run.")
+                .has_arg(true)
+                .required(false)
+                .build()
+        );
+        Some(options)
     }
 }

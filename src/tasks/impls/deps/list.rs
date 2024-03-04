@@ -1,15 +1,16 @@
 use crate::{
     config::JabuConfig,
     tools::JavaHome,
-    tasks::{JabuTask, TaskResult}
+    tasks::{JabuTask, TaskResult},
+    args::parser::ParsedArguments
 };
-use prettytable::{Cell, Attr, Row, color::{self, Color}};
+use prettytable::{Cell, Attr, Row, color};
 
 #[derive(Default)]
 pub struct ListDepsTask;
 
 impl JabuTask for ListDepsTask {
-    fn execute(&self, args: Vec<String>, jabu_config: &JabuConfig, java_home: &JavaHome) -> TaskResult {
+    fn execute(&self, args: Vec<String>, _: Option<ParsedArguments>, jabu_config: &JabuConfig, java_home: &JavaHome) -> TaskResult {
         let dep_names: Vec<String> = jabu_config.fs_schema.get_libs().iter()
             .map(|lib| lib.file_stem().unwrap().to_str().unwrap_or("-----").to_string())
             .collect();

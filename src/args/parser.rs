@@ -1,4 +1,7 @@
-use crate::args::options::*;
+use crate::{
+    args::options::*,
+    tasks::TaskError
+};
 use std::{
     collections::{HashMap, HashSet},
     error::Error,
@@ -92,8 +95,29 @@ impl From<Vec<String>> for ParsedArguments {
 }
 
 impl ParsedArguments {
+    /// Creates an instance of [`ParsedArguments`] with the given
+    /// `args`, while also checking if the provided arguments are valid based on the
+    /// given `options`.
+    ///
+    /// # Arguments
+    /// * `args`: The arguments given by the user (*i.e. cli arguments*)
+    /// * `options`: The options that will be used to check if the given arguments are
+    /// valid.
+    ///
+    /// # Note
+    /// If `--help` is specified, this method will print `options`' help and
+    /// then quit with exit code 0.
     pub fn new_with_options(args: Vec<String>, options: &Options) -> ArgParsingResult<Self> {
         let mut parsed_args = Self::from(args);
+        
+        // BUG: When a task is executed with "--help", and this task has 
+        // dependency tasks, the dependency tasks will get executed, and then
+        // the print_help() will be executed.
+        if parsed_args.has_option_with_name("help") {
+            options.print_help();
+            // TODO: Should it change? 
+            std::process::exit(0);
+        }
         match parsed_args.validate(options) {
             Ok(_) => Ok(parsed_args),
             Err(errors) => Err(errors),
@@ -105,6 +129,11 @@ impl ParsedArguments {
     /// an `&Option<String>` containing the value of the option is returned.
     pub fn get_option_value(&self, option_name: &str) -> Option<&Option<String>> {
         self.options.get(option_name)
+    }
+
+    pub fn has_option_with_name<T>(&self, option_name: T) -> bool 
+        where T: AsRef<str> {
+        self.options.contains_key(option_name.as_ref())
     }
 
     /// Checks that all the rules stablished by the <code>options</code> argument

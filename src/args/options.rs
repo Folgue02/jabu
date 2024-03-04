@@ -1,3 +1,8 @@
+use prettytable::{Row, Attr, Cell, color};
+/// Contains multiple [`ParOption`], this structure
+/// is used with the purpose of declaring which flags 
+/// should be used with the application, specify a description,
+/// and their behaviour.
 pub struct Options {
     pub options: Vec<ParOption>
 }
@@ -38,6 +43,35 @@ impl Options {
     pub fn has_option_with_name(&self, option_name: &str) -> bool {
         self.options.iter()
             .any(|option| option.name == option_name)
+    }
+
+    /// Prints a table containing the usage guide of each option
+    /// and its description (*if any is given*)
+    pub fn print_help(&self) {
+        let mut table = prettytable::Table::new();
+        table.set_format(*prettytable::format::consts::FORMAT_BORDERS_ONLY);
+        table.set_titles(
+            Row::new(
+                vec![
+                    Cell::new("Option"),
+                    Cell::new("Description")
+                ]
+            )
+        );
+
+        self.options.iter()
+            .map(|option| {
+                Row::new(
+                    vec![
+                        Cell::new(&option.display_name())
+                            .with_style(Attr::ForegroundColor(color::BLUE)),
+                        Cell::new(&option.description.as_ref().unwrap_or(&"No description given.".to_string()))
+                    ]
+                )
+            })
+            .for_each(|row| {table.add_row(row);});
+
+        table.printstd();
     }
 }
 
@@ -148,6 +182,28 @@ impl ParOption {
     /// Returns a default instance of `ParOptionBuilder`
     pub fn builder() -> ParOptionBuilder {
         ParOptionBuilder::default()
+    }
+
+    /// Generates the display name for option,
+    /// displaying the name, then the short version, and
+    /// if the option is supposed to be used along a value,
+    /// it also is indicated.
+    ///
+    /// # Example
+    /// *ParOption name: output-type, short: 'o', has_arg: true*
+    /// 
+    /// "`--output-type:{value}, -o:{value}`"
+    pub fn display_name(&self) -> String {
+        let long_part = format!("--{}", self.name);
+        let short_part = format!("-{}", self.short);
+        let arg_specification = if self.has_arg {
+            format!(":{{value}}")
+        } else {
+            String::new()
+        };
+
+
+        format!("{0}{2},\n   {1}{2}", long_part, short_part, arg_specification)
     }
 }
 

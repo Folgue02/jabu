@@ -1,4 +1,14 @@
-use crate::{config::{JabuConfig, JABU_FILE_NAME}, tools::JavaHome};
+use crate::{
+    config::{
+        JabuConfig,
+        JABU_FILE_NAME
+    },
+    tools::JavaHome,
+    args::{
+        options::Options,
+        parser::ParsedArguments
+    }
+};
 use std::{
     collections::HashMap,
     path::PathBuf
@@ -25,7 +35,12 @@ pub trait JabuTask {
     /// Description of the task.
 	fn description(&self) -> String;
     /// Executes the task with the given arguments and jabu config.
-	fn execute(&self, args: Vec<String>, jabu_config: &JabuConfig, java_home: &JavaHome) -> TaskResult;
+	fn execute(
+        &self,
+        args: Vec<String>,
+        parsed_args: Option<ParsedArguments>,
+        jabu_config: &JabuConfig,
+        java_home: &JavaHome) -> TaskResult;
     fn get_dependency_task_specs(&self) -> JabuTaskDependencySpec {
         JabuTaskDependencySpec::default()
     }
@@ -34,6 +49,11 @@ pub trait JabuTask {
     /// of the required tools for the task (*i.e. `&["javac", "java"]`*)
     fn required_tools(&self) -> &[&'static str] {
         &[]
+    }
+
+    /// Returns the options specified by the task, if any.
+    fn options(&self) -> Option<Options> {
+        None
     }
 }
 
@@ -73,6 +93,9 @@ impl Default for JabuTaskManager {
 impl JabuTaskManager {
     /// Creates the default jabu task manager for the top level tasks 
     /// (*the main tasks available for jabu such as `new` or `version`.
+    ///
+    /// This is different from just using the [`Default::default()`] trait method, 
+    /// which would just return an empty jabu task manager.
     pub fn top_level_default() -> Self {
         let mut tasks: HashMap<String, Box<dyn JabuTask>> = HashMap::new();
         tasks.insert("run".to_string(), Box::new(Run::default()));
@@ -130,6 +153,12 @@ impl JabuTaskManager {
             return Err(TaskError::MissingRequiredTaskTools(required_tools_status))
         }
 
+        let parsed_args = if let Some(options) = task.options() {
+            Some(ParsedArguments::new_with_options(args.clone(), &options)?)
+        } else {
+            None
+        };
+
         for (task_name, task_args) in task.get_dependency_task_specs().specs {
             println!("=> Executing dependency task '{task_name}' with args '{task_args:?}'");
 
@@ -140,6 +169,6 @@ impl JabuTaskManager {
             }
         }
 
-    	task.execute(args.clone(), &jabu_config, &java_home)
+    	task.execute(args.clone(), parsed_args, &jabu_config, &java_home)
     }
 }

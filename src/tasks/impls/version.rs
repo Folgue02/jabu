@@ -1,10 +1,11 @@
+use crate::args::parser::ParsedArguments;
 use crate::tasks::Task;
 
 #[derive(Debug, Default)]
 pub struct VersionTask;
 
 impl Task for VersionTask {
-    fn execute(&self, args: Vec<String>) -> crate::tasks::TaskResult {
+    fn execute(&self, args: Vec<String>, _: Option<ParsedArguments>) -> crate::tasks::TaskResult {
         println!("Version: {}", crate::VERSION);
         Ok(())
     }
