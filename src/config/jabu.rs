@@ -3,6 +3,7 @@ use crate::utils::{walkdir_find, FSNodeType};
 
 use ron::error::SpannedError;
 use serde::{Deserialize, Serialize};
+use jaburepo::repository::Artifact;
 use std::collections::HashMap;
 
 use super::java::ProjectType;
@@ -236,6 +237,16 @@ pub struct DependencySpec {
     pub version: String,
 }
 
+impl Into<Artifact> for DependencySpec {
+    fn into(self) -> Artifact {
+        Artifact {
+            artifact_id: self.artifact_name,
+            group_id: self.group_id,
+            version: self.version
+        }
+    }
+}
+
 impl DependencySpec {
     #[allow(unused)]
     pub fn new<T>(artifact_name: T, group_id: T, version: T) -> Self 
@@ -259,15 +270,15 @@ impl Serialize for DependencySpec {
 impl TryFrom<&str> for DependencySpec {
     type Error = ();
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        let splitted = value.splitn(3, '-').collect::<Vec<&str>>();
+        let splitted = value.splitn(3, ':').collect::<Vec<&str>>();
 
         if splitted.len() < 3 {
             Err(())
         } else {
             Ok(
                 DependencySpec {
-                    artifact_name: splitted[0].to_string(),
-                    group_id: splitted[1].to_string(),
+                    group_id: splitted[0].to_string(),
+                    artifact_name: splitted[1].to_string(),
                     version: splitted[2].to_string()
                 }
             )
@@ -301,7 +312,7 @@ pub struct DependenciesConfig {
     pub local: Vec<DependencySpec>,
 
     /// A map, representing the remote dependencies. **The key represents the
-    /// URL of the repository from where to fetch from>**, and the value, being a list
+    /// URL of the repository from where to fetch from**, and the value, being a list
     /// are the dependencies to fetch.
-    pub remote: HashMap<String, Vec<DependencySpec>>
+    pub remote: Vec<DependencySpec> 
 }

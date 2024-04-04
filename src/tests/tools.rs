@@ -225,15 +225,16 @@ mod jpackage {
             "--main-jar", "application.jar",
             "--main-class", "me.user.app.App",
             "--name", "TestApp",
-            "--output", "target/native",
-            "--type", "app-image"
+            "--dest", "target/native",
+            "--type", "app-image",
+            "--verbose"
         ];
         let input = JPackageToolConfig::new(
             PathBuf::from("target/bin/application.jar"),
             "TestApp".to_string(),
             "me.user.app.App".to_string(),
             "target/native".to_string(),
-            "app-image".to_string()
+            Some("app-image".to_string())
         );
 
         assert_eq!(expected, input.try_into_args().unwrap())

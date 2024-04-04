@@ -1,8 +1,10 @@
 mod deps_task_manager;
 mod list;
+mod fetch;
 
 pub use deps_task_manager::*;
 pub use list::*;
+use fetch::*;
 use crate::{
     tasks::{
         JabuTask,

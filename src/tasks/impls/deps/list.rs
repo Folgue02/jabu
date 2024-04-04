@@ -10,12 +10,12 @@ use prettytable::{Cell, Attr, Row, color};
 pub struct ListDepsTask;
 
 impl JabuTask for ListDepsTask {
-    fn execute(&self, args: Vec<String>, _: Option<ParsedArguments>, jabu_config: &JabuConfig, java_home: &JavaHome) -> TaskResult {
+    fn execute(&self, _: Vec<String>, _: Option<ParsedArguments>, jabu_config: &JabuConfig, _: &JavaHome) -> TaskResult {
         let dep_names: Vec<String> = jabu_config.fs_schema.get_libs().iter()
             .map(|lib| lib.file_stem().unwrap().to_str().unwrap_or("-----").to_string())
             .collect();
 
-        Self::list_dependencies(jabu_config, dep_names, vec![]);
+        Self::list_dependencies(jabu_config);
        
         Ok(())
     }
@@ -27,7 +27,9 @@ impl JabuTask for ListDepsTask {
 }
 
 impl ListDepsTask {
-    fn list_dependencies(jabu_config: &JabuConfig, local_dependencies: Vec<String>, remote_dependencies: Vec<String>) {
+    fn list_dependencies(jabu_config: &JabuConfig) {
+        let local_dependencies = &jabu_config.dependencies.local;
+        let remote_dependencies = &jabu_config.dependencies.remote;
         let mut table = prettytable::Table::new();
         table.add_row(
             Row::new(
@@ -40,6 +42,7 @@ impl ListDepsTask {
             )
         );
 
+        // --- Local dependencies list
         if local_dependencies.is_empty() {
             table.add_row(
                 Row::new(
@@ -53,12 +56,13 @@ impl ListDepsTask {
             );
         } else {
             local_dependencies.iter()
-                .for_each(|dep_name| {
+                .for_each(|dep| {
                     table.add_row(
                         Row::new(vec![
-                            Cell::new(dep_name)
+                            Cell::new(&dep.artifact_name)
                                 .with_style(Attr::Bold)
                                 .with_style(Attr::ForegroundColor(color::BLUE)),
+                            Cell::new(&dep.version)
                         ])
                     );
                 });
@@ -75,6 +79,8 @@ impl ListDepsTask {
                 ]
             )
         );
+
+        // --- Remote dependencies list
         if remote_dependencies.is_empty() {
             table.add_row(
                 Row::new(
@@ -88,12 +94,13 @@ impl ListDepsTask {
             );
         } else {
             remote_dependencies.iter()
-                .for_each(|dep_name| {
+                .for_each(|dep| {
                     table.add_row(
                         Row::new(vec![
-                            Cell::new(dep_name)
+                            Cell::new(&dep.artifact_name)
                                 .with_style(Attr::Bold)
                                 .with_style(Attr::ForegroundColor(color::BLUE)),
+                            Cell::new(&dep.version)
                         ])
                     );
                 });
