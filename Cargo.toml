@@ -1,18 +1,3 @@
-[package]
-name = "jabu"
-version = "0.0.6"
-edition = "2021"
-
-[dependencies]
-built = { version = "0.7", features = ["chrono", "semver"] }
-chrono = "0.4.33"
-pyo3 = "0.20.2"
-ron = "0.8"
-serde = { version = "1.0.197", features = ["derive"] }
-prettytable-rs = "0.10.0"
-walkdir = "2.4.0"
-jaburepo = { git ="https://github.com/folgue02/jaburepo.git", commit = "51e95dc" }
-reqwest = { version = "0.11.26", features = ["blocking"] }
-
-[build-dependencies]
-built = { version = "0.7", features = ["cargo-lock", "dependency-tree", "git2", "chrono", "semver"] }
+[workspace] 
+members = ["jabu", "jabu-config", "jaburepo"]
+resolver = "1"
