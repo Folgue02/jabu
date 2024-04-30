@@ -20,7 +20,8 @@ pub enum TaskError {
     MissingJavaEnvironment,
 
     /// The java environment that has been found is not valid. (*it may be missing
-    /// some of the utilities*)
+    /// some of the utilities*). The string of the variant represents the path to the
+    /// java home/environment.
     ///
     /// # See
     /// - [`TaskError::MissingRequiredTaskTools`]
@@ -113,6 +114,10 @@ impl From<jaburepo::error::RepositoryOperationError> for TaskError {
     fn from(value: jaburepo::error::RepositoryOperationError) -> Self {
         match value {
             RepositoryOperationError::IoError(e) => e.into(),
+            RepositoryOperationError::ArtifactNotFound(e) => TaskError::UnavailableResource {
+                resource_name: e.to_string(),
+                error: None
+            }
         }
     }
 }

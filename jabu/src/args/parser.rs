@@ -115,7 +115,6 @@ impl ParsedArguments {
         // the print_help() will be executed.
         if parsed_args.has_option_with_name("help") {
             options.print_help();
-            // TODO: Should it change? 
             std::process::exit(0);
         }
         match parsed_args.validate(options) {

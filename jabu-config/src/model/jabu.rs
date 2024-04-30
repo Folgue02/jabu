@@ -17,7 +17,7 @@ pub struct JabuProject {
 impl JabuProject {
     pub fn display_name(&self) -> String {
         format!(
-            "{}:{}:{}",
+            "{}_{}_{}",
             self.header.author, self.header.project_name, self.header.version
         )
     }
@@ -31,7 +31,7 @@ impl JabuProject {
             manifest: JarManifest::from(manifest),
             fs_schema: FsSchema::new(project_type),
             java_config: JavaConfig::default(),
-            dependencies: DependenciesConfig::default()
+            dependencies: DependenciesConfig::default(),
         }
     }
 }
@@ -174,26 +174,20 @@ public class App {
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Hash, Eq)]
+/// Contains the specification of a jabu artifact, meaning that it holds
+/// information like the *author* of artifact, its *name* and its *version*.
 pub struct ArtifactSpec {
     pub author: String,
     pub artifact_id: String,
     pub version: String,
 }
 
-/// Represents the configuration of the project's dependencies.
-#[derive(Serialize, Deserialize, Default, Clone, PartialEq, Debug)]
-pub struct DependenciesConfig {
-    /// List of local dependencies. Jabu will check that these exist in the `lib` dir
-    /// with their corresponding name + .jar
-    pub local: Vec<ArtifactSpec>,
-
-    /// A map, representing the remote dependencies. **The key represents the
-    /// URL of the repository from where to fetch from**, and the value, being a list
-    /// are the dependencies to fetch.
-    pub remote: Vec<ArtifactSpec>,
+impl ToString for ArtifactSpec {
+    fn to_string(&self) -> String {
+        format!("{}_{}_{}", self.author, self.artifact_id, self.version)
+    }
 }
-
 impl<'de> Deserialize<'de> for ArtifactSpec {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -211,14 +205,14 @@ impl<'de> Deserialize<'de> for ArtifactSpec {
 
 impl Into<String> for ArtifactSpec {
     fn into(self) -> String {
-        format!("{}:{}:{}", self.author, self.artifact_id, self.version)
+        format!("{}_{}_{}", self.author, self.artifact_id, self.version)
     }
 }
 
 impl TryFrom<&str> for ArtifactSpec {
     type Error = ();
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        let splitted = value.splitn(3, ':').collect::<Vec<&str>>();
+        let splitted = value.splitn(3, '_').collect::<Vec<&str>>();
 
         if splitted.len() < 3 {
             Err(())
@@ -238,7 +232,7 @@ impl Serialize for ArtifactSpec {
         S: serde::Serializer,
     {
         serializer.serialize_str(
-            format!("{}:{}:{}", self.author, self.artifact_id, self.version).as_str(),
+            format!("{}_{}_{}", self.author, self.artifact_id, self.version).as_str(),
         )
     }
 }
@@ -256,3 +250,17 @@ impl ArtifactSpec {
         }
     }
 }
+
+/// Represents the configuration of the project's dependencies.
+#[derive(Serialize, Deserialize, Default, Clone, PartialEq, Debug)]
+pub struct DependenciesConfig {
+    /// List of local dependencies. Jabu will check that these exist in the `lib` dir
+    /// with their corresponding name + .jar
+    pub local: Vec<ArtifactSpec>,
+
+    /// A map, representing the remote dependencies. **The key represents the
+    /// URL of the repository from where to fetch from**, and the value, being a list
+    /// are the dependencies to fetch.
+    pub remote: Vec<ArtifactSpec>,
+}
+
