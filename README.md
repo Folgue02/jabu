@@ -6,7 +6,7 @@ A build system as well as an automation tool written in Rust for Java project an
 ```bash
 git clone https://github.com/folgue02/jabu.git
 cd jabu
-cargo install --path .
+cargo install --path ./jabu
 ```
 
 ## 2. User guide
