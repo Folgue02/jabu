@@ -183,11 +183,12 @@ pub struct ArtifactSpec {
     pub version: String,
 }
 
-impl ToString for ArtifactSpec {
-    fn to_string(&self) -> String {
-        format!("{}_{}_{}", self.author, self.artifact_id, self.version)
+impl std::fmt::Display for ArtifactSpec {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}_{}_{}", self.author, self.artifact_id, self.version)
     }
 }
+
 impl<'de> Deserialize<'de> for ArtifactSpec {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
