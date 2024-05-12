@@ -1,0 +1,17 @@
+[package]
+name = "jabu-repo-server"
+version = "0.1.1"
+edition = "2021"
+
+[dependencies]
+jaburepo = { path = "../jaburepo" }
+jabu-config = { path = "../jabu-config" }
+axum = "0.7.5"
+log = "0.4.21"
+simple_logger = "5.0.0"
+tokio = { version = "1.37.0", features = ["rt", "macros"] }
+clap = { version = "4.5.4", features = ["derive"] }
+askama = { version = "0.12.1", features = ["with-axum"] }
+askama_axum = "0.4.0"
+
+

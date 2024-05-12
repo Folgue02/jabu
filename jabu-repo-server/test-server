@@ -1,0 +1,53 @@
+#!/bin/perl
+use strict;
+use warnings;
+
+use File::Basename;
+use File::Temp qw(tempdir);
+use File::Path qw(make_path);
+use File::Spec::Functions 'catfile';
+
+# Port of the server
+my $PORT = 8080;
+
+sub pprint {
+    my $msg = shift;
+    print "[" . basename($0) ."]: $msg\n";
+}
+
+sub create_artifact {
+    my $repo_path = shift; 
+    my $author = shift;
+    my $artifact_id = shift;
+    my $version = shift;
+
+
+    my $base_artifact_path = catfile($repo_path, $author, $artifact_id);
+    make_path $base_artifact_path;
+
+    pprint "Creating artifact $author" . "_" . $artifact_id . "_" . "$version in repository with path $base_artifact_path";
+
+    open(my $jar_file, ">", catfile($base_artifact_path, "$version.jar")) or die "Couldn't create sample jar file.";
+    open(my $jaburon_file, ">", catfile($base_artifact_path, "$version.ron")) or die "Couldn't create sample jar file.";
+
+    print $jar_file "JAR contents";
+    print $jaburon_file "JABURON contents";
+}
+
+sub initialize_repo {
+    my $tmp_dir = tempdir;
+    $tmp_dir =~ s/\n//g;
+    pprint "Using $tmp_dir as jabu repository";
+
+    pprint "Creating sample artifact.";
+    create_artifact $tmp_dir, "author", "artifact", "1.0.0";
+    create_artifact $tmp_dir, "author", "artifact", "1.5.0";
+    create_artifact $tmp_dir, "author", "downplay", "0.0.1";
+
+    return $tmp_dir
+}
+
+pprint "Initializing repo...";
+my $tmp_dir = initialize_repo;
+pprint "Starting server...";
+system("RUSTFLAGS=-Awarnings cargo r -q -- --repo-path $tmp_dir --port $PORT") == 0 or die "The server has exited with code '$?'.";
