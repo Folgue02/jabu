@@ -1,3 +1,3 @@
 [workspace] 
-members = ["jabu", "jabu-config", "jaburepo"]
+members = ["jabu", "jabu-config", "jabu-repo-server", "jaburepo"]
 resolver = "1"

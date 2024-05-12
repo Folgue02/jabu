@@ -1,0 +1,69 @@
+#!/bin/perl
+use strict;
+use warnings;
+
+use Cwd qw();
+use File::Temp qw(tempdir);
+
+my $ORIGINAL_CWD = Cwd::cwd();
+
+sub test_remote_deps {
+    print "Installing jabu...\n";
+    system("cargo install --path .") == 0 or die $?;
+    
+    my $tmp_dir = tempdir;
+    print "Using $tmp_dir as temporary directory.";
+    chdir $tmp_dir;
+
+    system("jabu new --name:playground --project-type:bin") == 0 or die $?;
+    chdir "playground";
+    my $config_text = <<CONFIG_TEXT;
+(
+    header: (
+        project_name: "playground",
+        author: "anon",
+        description: "A Java project.",
+        version: "0.0.1",
+    ),
+    java_config: (
+        java_version: 17,
+        source: 17,
+        target: 17,
+    ),
+    manifest: (
+        contents: {
+            "Main-Class": "App",
+        },
+    ),
+    fs_schema: (
+        source: "./src/main",
+        target: "./target",
+        lib: "./lib",
+        resources: "./src/resources",
+        scripts: "./scripts/",
+        test: "./src/test",
+        other: [],
+    ),
+    dependencies: (
+        local: [],
+        remote: ["author_artifact_1.0.0"],
+    ),
+)
+CONFIG_TEXT
+    open(my $jaburon_file, ">", "jabu.ron") or die;
+    print $jaburon_file $config_text;
+    system("jabu deps fetch") == 0 or die "Couldn't fetch";
+}
+
+my %functions = (
+    remotedeps => \&test_remote_deps
+);
+
+if (exists $functions{$ARGV[0]}) {
+    $functions{$ARGV[0]}->();
+} elsif ($ARGV[0] eq "list") {
+    print "Available actions: \n";
+    print("\t- $_\n") for keys %functions;
+} else {
+    die "Couldn't find it.";
+}
