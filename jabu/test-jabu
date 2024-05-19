@@ -4,15 +4,23 @@ use warnings;
 
 use Cwd qw();
 use File::Temp qw(tempdir);
+use File::Spec;
+use File::Path qw(rmtree);
+use File::Basename;
 
 my $ORIGINAL_CWD = Cwd::cwd();
 
+sub pprint {
+    my $msg = shift;
+    print "[" . basename($0) ."]: $msg\n";
+}
+
 sub test_remote_deps {
-    print "Installing jabu...\n";
+    pprint "Installing jabu...\n";
     system("cargo install --path .") == 0 or die $?;
     
     my $tmp_dir = tempdir;
-    print "Using $tmp_dir as temporary directory.";
+    pprint "Using $tmp_dir as temporary directory.\n";
     chdir $tmp_dir;
 
     system("jabu new --name:playground --project-type:bin") == 0 or die $?;
@@ -24,6 +32,7 @@ sub test_remote_deps {
         author: "anon",
         description: "A Java project.",
         version: "0.0.1",
+        tags: []
     ),
     java_config: (
         java_version: 17,
@@ -52,18 +61,42 @@ sub test_remote_deps {
 CONFIG_TEXT
     open(my $jaburon_file, ">", "jabu.ron") or die;
     print $jaburon_file $config_text;
-    system("jabu deps fetch") == 0 or die "Couldn't fetch";
+    system("JABU_REMOTE_REPO=\"http://localhost:8080\" jabu deps fetch") == 0 or die "Couldn't fetch";
+}
+
+sub cleanlocalrepo {
+    my $repo_path = "$ENV{HOME}/.jaburepo"; 
+    pprint "Cleaning artifacts in the local repository '$repo_path'\n";
+
+    opendir(my $dir, $repo_path) or die "Cannot open directory : $!";
+
+    my @child_elements = readdir($dir);
+
+    for my $child_file (@child_elements) {
+        next if $child_file eq "." or $child_file eq "..";
+
+        my $full_child_path = File::Spec->catfile($repo_path, $child_file);
+
+        if (-f $full_child_path) {
+            unlink $full_child_path or warn "Couldn't remove $full_child_path.";
+            pprint "'$full_child_path' removed.\n";
+        } elsif (-d $full_child_path) {
+            rmtree($full_child_path, {verbose => 1, safe => 0}) or warn "Couldn't remove $full_child_path";
+            pprint "'$full_child_path' removed.\n";
+        }
+    }
 }
 
 my %functions = (
+    cleanlocalrepo => \&cleanlocalrepo,
     remotedeps => \&test_remote_deps
 );
 
 if (exists $functions{$ARGV[0]}) {
     $functions{$ARGV[0]}->();
 } elsif ($ARGV[0] eq "list") {
-    print "Available actions: \n";
-    print("\t- $_\n") for keys %functions;
+    pprint "Available actions:";
+    pprint("\t- $_") for keys %functions;
 } else {
-    die "Couldn't find it.";
+    die "Couldn't find the task ${ARGV[0]} it.";
 }

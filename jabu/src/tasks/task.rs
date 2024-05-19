@@ -182,6 +182,12 @@ impl std::fmt::Display for TaskError {
 
 impl std::error::Error for TaskError {}
 
+impl TaskError {
+    pub fn from_io_error(error: std::io::Error, description: impl Into<String>) -> TaskError {
+        TaskError::IOError(std::io::Error::new(error.kind(), format!("{:?}: {}", error, description.into())))
+    }
+}
+
 /// Represents a generic task that may or may not be executed inside of a
 /// jabu project.
 pub trait Task: std::fmt::Debug {
