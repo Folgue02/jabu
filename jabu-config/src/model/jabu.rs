@@ -1,4 +1,5 @@
 use super::{JarManifest, ProjectType};
+use ron::error::SpannedError;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, path::PathBuf};
 
@@ -36,13 +37,34 @@ impl JabuProject {
     }
 }
 
+impl TryFrom<&str> for JabuProject {
+    type Error = SpannedError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        ron::from_str(value) 
+    }
+}
+
 /// Header of the project, containing the metadata, such as
 /// the name, its author, description etc...
 #[derive(Debug, PartialEq, Deserialize, Serialize, Clone)]
 pub struct ConfigHeader {
+    /// Name of the project.
     pub project_name: String,
+
+    /// Author of the project.
     pub author: String,
+
+    /// Description of the project.
     pub description: String,
+
+    /// Project's license, this can be set to None if it doesn't have.
+    pub license: Option<String>,
+
+    /// Tags set for the project (*ej, 'test', 'compile', 'web'*)
+    pub tags: Vec<String>,
+
+    /// The version of the project.
     pub version: String,
 }
 
@@ -54,6 +76,8 @@ impl ConfigHeader {
             project_name: proj_name.to_string(),
             author: String::from("anon"),
             description: String::from("A Java project."),
+            license: None,
+            tags: Vec::new(),
             version: String::from("0.0.1"),
         }
     }
@@ -97,7 +121,7 @@ pub struct FsSchema {
     /// Directory containing the dependencies of the project.
     pub lib: String,
 
-    /// The resources directory of the project.
+    /// This directory contains the resources of the application.
     pub resources: String,
 
     /// Directory where all the scripts are stored.
@@ -114,7 +138,7 @@ pub struct FsSchema {
     /// Due to the annotation `#[serde(skip)]` given, this is not stored nor fetched
     /// from the jabu.ron file.
     #[serde(skip)]
-    pub generated_files: HashMap<&'static str, &'static str>,
+    pub generated_files: HashMap<String, String>,
 
     /// Other directories to create.
     pub other: Vec<String>,
@@ -126,7 +150,7 @@ impl FsSchema {
         // depending on it.
         let mut generated_files = HashMap::new();
         generated_files.insert(
-            "./src/main/App.java",
+            "./src/main/App.java".to_string(),
             r#"
 /*
  * Auto-generated file by Jabu.
@@ -136,7 +160,7 @@ public class App {
     public static void main(String[] args) {
         System.out.println("Hello World from Jabu!");
     }
-}"#,
+}"#.to_string(),
         );
         Self {
             source: "./src/main".to_string(),
@@ -174,9 +198,9 @@ public class App {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Hash, Eq)]
 /// Contains the specification of a jabu artifact, meaning that it holds
 /// information like the *author* of artifact, its *name* and its *version*.
+#[derive(Debug, PartialEq, Clone, Hash, Eq)]
 pub struct ArtifactSpec {
     pub author: String,
     pub artifact_id: String,
@@ -264,4 +288,3 @@ pub struct DependenciesConfig {
     /// are the dependencies to fetch.
     pub remote: Vec<ArtifactSpec>,
 }
-

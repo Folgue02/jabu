@@ -1,17 +1,19 @@
 [package]
 name = "jabu-repo-server"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 
 [dependencies]
 jaburepo = { path = "../jaburepo" }
 jabu-config = { path = "../jabu-config" }
-axum = "0.7.5"
+axum = { version = "0.7.5", features = ["multipart"] }
 log = "0.4.21"
 simple_logger = "5.0.0"
-tokio = { version = "1.37.0", features = ["rt", "macros"] }
+tokio = { version = "1.37.0", features = ["full"] }
 clap = { version = "4.5.4", features = ["derive"] }
 askama = { version = "0.12.1", features = ["with-axum"] }
 askama_axum = "0.4.0"
-
-
+sqlx = { version = "0.7.4", features = ["postgres", "runtime-tokio-native-tls", "chrono"] }
+chrono = { version = "0.4.38", features = ["serde"] }
+serde = { version = "1.0.202", features = ["derive"] }
+uuid = { version = "1.8.0", features = ["v4"] }

@@ -3,10 +3,17 @@ use tokio::net::TcpListener;
 
 mod config;
 mod router;
+mod controller;
+mod model;
+
+const DATABASE_URL: &'static str = "postgres://repository@localhost";
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
     simple_logger::init().expect("Couldn't initialize the logger.");
+    log::info!("Initializing database...");
+    let database = controller::init_db().await.expect("Couldn't initialize database");
+    log::info!("Done.");
 
     // ***************************
     // Parse CLI args
@@ -31,7 +38,7 @@ async fn main() {
     let server_config: config::Config = config::CliArgs::parse().into();
     axum::serve(
         tcp_listener,
-        router::get_app_router(router::get_api_router(server_config.clone())),
+        router::get_app_router(router::get_api_router(server_config.clone(), database.clone()), database),
     )
     .await
     .unwrap();

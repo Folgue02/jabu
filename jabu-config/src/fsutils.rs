@@ -184,16 +184,16 @@ impl FSNodeType {
     /// if there is no predicate, then everything is valid.
     ///
     /// # Example
-    /// ```rust
+    /// ```not_rust
     /// let expected_types = &[FSNodeType::File, FSNodeType::SymLink];
     ///
-    /// let entry = ...;
+    /// let entry = todo!(); 
     ///
     /// // If this returns `true`, this would mean that the entry points
     /// // either to a file or a symbolic link or both.
-    /// FSNodeType::check_match_multiple_types(expected_types, entry);
+    /// Self::check_match_multiple_types(expected_types, entry);
     /// ```
-    fn check_match_multiple_types(types: &[FSNodeType], entry: &walkdir::DirEntry) -> bool {
+    fn check_match_multiple_types(types: &[Self], entry: &walkdir::DirEntry) -> bool {
         if types.is_empty() {
             true
         } else {
