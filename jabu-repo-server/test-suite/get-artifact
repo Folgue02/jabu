@@ -1,0 +1,71 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use HTTP::Request;
+use HTTP::Request::Common;
+use LWP::UserAgent; 
+use File::Spec::Functions;
+use File::Basename;
+
+my $author = $ARGV[0] // "someoneelse";
+
+my $base_url = "http://localhost:8080/api/get/$author/artifact/1.0.0/";
+my $expected_jar = "JAR contents";
+
+open(my $sample_ron, "<", catfile(dirname($0), "sample.ron")) or die "Couldn't read sample.ron: $!";
+read $sample_ron, my $expected_jaburon, -s $sample_ron;
+close $sample_ron;
+
+=method check_url_response($url, $expected_result)
+=synopsis
+ my $result = check_url_response "http://...", "expected_body";
+
+=description
+Does a request on $url, and checks if the body of the response 
+matches the $expected_result given.
+
+
+This function returns 1 if everything has gone right, or 0 
+if something has failed.
+=cut
+sub check_url_response {
+    my $url = shift;
+    my $expected_result = shift;
+    my $ua = LWP::UserAgent->new;
+
+    my $response = $ua->request(GET $url);
+
+    if ($response->is_success) {
+        print "EXPECTED: $expected_result\n";
+        print "RESULT:   " . $response->content . "\n";
+        if ($expected_result eq $response->content) {
+            print "\tTest passed\n";
+            1
+        } else {
+            print "\tTest failed\n";
+            0
+        }
+    } else {
+        print "BAD REQUEST: " . $response->code . "\n";
+        0
+    }
+}
+
+my $count = 0;
+
+if (!check_url_response $base_url . "jar", $expected_jar) {
+    print "\t[X] Jar test failed.\n";
+} else {
+    print "\t[V] Jar test passed.\n";
+    $count++;
+}
+
+if (!check_url_response $base_url . "jaburon", $expected_jaburon) {
+    print "\t[X] JabuRon test failed.\n";
+} else {
+    print "\t[V] JabuRon test passed.\n";
+    $count++;
+}
+
+print "$count/2 tests passed.\n";

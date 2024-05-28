@@ -1,0 +1,24 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use HTTP::Request;
+use HTTP::Request::Common;
+use LWP::UserAgent; 
+use File::Spec::Functions;
+use File::Basename;
+
+my $author = $ARGV[0] // "someoneelse";
+
+my $url = "http://localhost:8080/api/register-author/$author";
+my $ua = LWP::UserAgent->new;
+
+my $response = $ua->request(POST $url);
+
+if ($response->is_success) {
+    print "RESPONSE: " . $response->content . "\n";
+    open(my $output_file, ">", catfile(dirname($0), "DELETEkey")) or die "Couldn't write to key file: $!";
+    print $output_file $response->content;
+} else {
+    die "RESPONSE STATUS: " . $response->code();
+}

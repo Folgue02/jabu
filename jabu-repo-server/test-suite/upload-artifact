@@ -1,0 +1,71 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use HTTP::Request;
+use HTTP::Request::Common;
+use LWP::UserAgent; 
+use File::Spec::Functions;
+use File::Basename;
+
+my $author = $ARGV[0] // "someoneelse";
+
+sub get_uuid {
+    my $file_path = catfile(dirname($0), "DELETEkey");
+    open(my $file, "<", $file_path) or die "Couldn't read key file: $!";
+
+    <$file>
+}
+
+
+my $url = "http://localhost:8080/api/upload/$author/artifact/1.0.0/" . get_uuid;
+
+my $ua = LWP::UserAgent->new;
+my $response = $ua->request(
+    POST $url,
+    Content_Type => "form-data",
+    Content => [
+        jaburon => "(
+    header: (
+        project_name: \"playground\",
+        author: \"anon\",
+        description: \"A Java project.\",
+        license: None,
+        tags: [],
+        version: \"0.0.1\",
+    ),
+    java_config: (
+        java_version: 17,
+        source: 17,
+        target: 17,
+    ),
+    manifest: (
+        contents: {
+            \"Main-Class\": \"App\",
+        },
+    ),
+    fs_schema: (
+        source: \"./src/main\",
+        target: \"./target\",
+        lib: \"./lib\",
+        resources: \"./src/resources\",
+        scripts: \"./scripts/\",
+        test: \"./src/test\",
+        other: [],
+    ),
+    dependencies: (
+        local: [],
+        remote: [],
+    ),
+)
+",
+        jar => "JAR contents"
+    ]
+);
+
+print "STATUS CODE: " . $response->code() . "\n";
+if ($response->is_success) {
+    print "Done.\n";
+} else {
+    exit 1;
+}
