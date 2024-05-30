@@ -8,7 +8,9 @@ use LWP::UserAgent;
 use File::Spec::Functions;
 use File::Basename;
 
-my $author = $ARGV[0] // "someoneelse";
+my $author = $ARGV[0] // "artifact";
+my $artifact_id = $ARGV[1] // "daniel";
+my $version = $ARGV[2] // "1.0.0";
 
 sub get_uuid {
     my $file_path = catfile(dirname($0), "DELETEkey");
@@ -18,7 +20,12 @@ sub get_uuid {
 }
 
 
-my $url = "http://localhost:8080/api/upload/$author/artifact/1.0.0/" . get_uuid;
+my $url = "http://localhost:8080/api/upload/$author/$artifact_id/$version/" . get_uuid;
+
+# Read the sample ron file used for uploading it.
+open(my $sample_ron_file, "<", catfile(dirname($0), "sample.ron")) or die "Couldn't read sample.ron: $!";
+read $sample_ron_file, my $sample_ron, -s $sample_ron_file;
+close $sample_ron_file;
 
 my $ua = LWP::UserAgent->new;
 my $response = $ua->request(

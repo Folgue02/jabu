@@ -20,5 +20,9 @@ if ($response->is_success) {
     open(my $output_file, ">", catfile(dirname($0), "DELETEkey")) or die "Couldn't write to key file: $!";
     print $output_file $response->content;
 } else {
+    if ($response->code() eq 401) {
+        print "Seems like the author couldn't be registed... Does it already exist?\n";
+        exit 0;
+    }
     die "RESPONSE STATUS: " . $response->code();
 }

@@ -1,0 +1,23 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use File::Spec::Functions;
+use File::Basename;
+
+my $author = $ARGV[0] // "artifact";
+my $artifact_id = $ARGV[1] // "daniel";
+my $version = $ARGV[2] // "1.0.0";
+
+
+my @scripts = ("register-author", "upload-artifact", "get-artifact");
+
+print "Using the following artifact identifier: '" . $author . "_" . $artifact_id . "_" . $version . "'\n";
+for (@scripts) {
+    my $script_full_path = catfile(dirname($0), $_);
+
+    print "==> Running script: $script_full_path\n";
+    system("perl '$script_full_path' $author $artifact_id $version") == 0 or die "Last script exited with code: $?";
+}
+
+print "Done.\n";
