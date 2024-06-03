@@ -1,43 +1,33 @@
 use crate::{
+    args::{options::Options, parser::ParsedArguments},
     tools::JavaHome,
-    args::{
-        options::Options,
-        parser::ParsedArguments
-    }
 };
-use jabu_config::{model::{JABU_FILE_NAME, JabuProject}, fsutils::project_from_directory};
-use std::{
-    collections::HashMap,
-    path::PathBuf
+use jabu_config::{
+    fsutils::project_from_directory,
+    model::{JabuProject, JABU_FILE_NAME},
 };
+use std::{collections::HashMap, path::PathBuf};
 
 use super::{
-    TaskError, 
-    TaskResult,
     impls::{
-        deps, 
-        Run,
-        DisplayJabuTask,
-        BuildJabuTask,
-        ScriptsTask,
-        CleanTask,
-        JarTask,
-        JavadocTask,
-        JPackageTask,
-    }
+        deps, BuildJabuTask, CleanTask, DisplayJabuTask, JPackageTask, JarTask, JavadocTask,
+        PublishTask, Run, ScriptsTask,
+    },
+    TaskError, TaskResult,
 };
 
 /// Represents a task that it's supposed to be executed inside of a Jabu project.
 pub trait JabuTask {
     /// Description of the task.
-	fn description(&self) -> String;
+    fn description(&self) -> String;
     /// Executes the task with the given arguments and jabu config.
-	fn execute(
+    fn execute(
         &self,
         args: Vec<String>,
         parsed_args: Option<ParsedArguments>,
         jabu_config: &JabuProject,
-        java_home: &JavaHome) -> TaskResult;
+        java_home: &JavaHome,
+    ) -> TaskResult;
     fn get_dependency_task_specs(&self) -> JabuTaskDependencySpec {
         JabuTaskDependencySpec::default()
     }
@@ -55,43 +45,41 @@ pub trait JabuTask {
 }
 
 pub struct JabuTaskDependencySpec {
-    specs: HashMap<String, Vec<String>>
+    specs: HashMap<String, Vec<String>>,
 }
 
 impl Default for JabuTaskDependencySpec {
     fn default() -> Self {
         Self {
-            specs: HashMap::new()
+            specs: HashMap::new(),
         }
     }
 }
 
 impl JabuTaskDependencySpec {
     pub fn new(specs: HashMap<String, Vec<String>>) -> Self {
-        Self {
-            specs
-        }
+        Self { specs }
     }
 }
 
 /// Contains a collection [`JabuTask`] that can be executed.
 pub struct JabuTaskManager {
-    pub tasks: HashMap<String, Box<dyn JabuTask>>
+    pub tasks: HashMap<String, Box<dyn JabuTask>>,
 }
 
 impl Default for JabuTaskManager {
     fn default() -> Self {
         Self {
-            tasks: HashMap::new()
+            tasks: HashMap::new(),
         }
     }
 }
 
 impl JabuTaskManager {
-    /// Creates the default jabu task manager for the top level tasks 
+    /// Creates the default jabu task manager for the top level tasks
     /// (*the main tasks available for jabu such as `new` or `version`.
     ///
-    /// This is different from just using the [`Default::default()`] trait method, 
+    /// This is different from just using the [`Default::default()`] trait method,
     /// which would just return an empty jabu task manager.
     pub fn top_level_default() -> Self {
         let mut tasks: HashMap<String, Box<dyn JabuTask>> = HashMap::new();
@@ -104,9 +92,8 @@ impl JabuTaskManager {
         tasks.insert("deps".to_string(), Box::new(deps::DepsSubtask::default()));
         tasks.insert("javadoc".to_string(), Box::new(JavadocTask::default()));
         tasks.insert("jpackage".to_string(), Box::new(JPackageTask::default()));
-        Self {
-            tasks
-        }
+        tasks.insert("publish".to_string(), Box::new(PublishTask::default()));
+        Self { tasks }
     }
 
     pub fn register_task(&mut self, task_name: &str, new_task: Box<dyn JabuTask>) -> bool {
@@ -119,8 +106,7 @@ impl JabuTaskManager {
     }
 
     pub fn contains_task_with_name(&self, task_name: &str) -> bool {
-        self.tasks.iter()
-            .any(|(t_name, _)| task_name == t_name)
+        self.tasks.iter().any(|(t_name, _)| task_name == t_name)
     }
 
     pub fn remove(&mut self, task_name: &str) -> Option<Box<dyn JabuTask>> {
@@ -128,15 +114,15 @@ impl JabuTaskManager {
     }
 
     pub fn get_task(&self, task_name: &str) -> Option<&Box<dyn JabuTask>> {
-    	self.tasks.get(task_name)
+        self.tasks.get(task_name)
     }
 
     pub fn execute(&self, task_name: &str, args: &Vec<String>, directory: &str) -> TaskResult {
-    	let task = if let Some(task) = self.get_task(task_name) {
-    		task
-    	} else {
-    		return Err(TaskError::NoSuchTask(task_name.to_string()));
-    	};
+        let task = if let Some(task) = self.get_task(task_name) {
+            task
+        } else {
+            return Err(TaskError::NoSuchTask(task_name.to_string()));
+        };
 
         //let jabu_config = JabuProject::try_from(PathBuf::from(directory).join(JABU_FILE_NAME))?;
         let jabu_project = project_from_directory(Some(PathBuf::from(directory)))?;
@@ -146,9 +132,11 @@ impl JabuTaskManager {
         let required_tools_status = java_home.check_required_tools(&required_tools.to_vec());
 
         // If any tool is missing
-        if required_tools_status.iter()
-            .any(|(_, available)| !available) {
-            return Err(TaskError::MissingRequiredTaskTools(required_tools_status))
+        if required_tools_status
+            .iter()
+            .any(|(_, available)| !available)
+        {
+            return Err(TaskError::MissingRequiredTaskTools(required_tools_status));
         }
 
         let parsed_args = if let Some(options) = task.options() {
@@ -167,6 +155,6 @@ impl JabuTaskManager {
             }
         }
 
-    	task.execute(args.clone(), parsed_args, &jabu_project, &java_home)
+        task.execute(args.clone(), parsed_args, &jabu_project, &java_home)
     }
 }

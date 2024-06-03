@@ -1,6 +1,6 @@
 [package]
 name = "jabu"
-version = "0.7.2"
+version = "0.8.0"
 edition = "2021"
 
 [dependencies]
@@ -13,7 +13,7 @@ ron = "0.8"
 serde = { version = "1.0.197", features = ["derive"] }
 prettytable-rs = "0.10.0"
 walkdir = "2.4.0"
-reqwest = { version = "0.11.26", features = ["blocking"] }
+reqwest = { version = "0.11.26", features = ["blocking", "multipart"] }
 home = "0.5.9"
 
 [build-dependencies]

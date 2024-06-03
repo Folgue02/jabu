@@ -9,6 +9,7 @@ mod jar;
 mod javadoc;
 mod health;
 mod jpackage;
+mod publish;
 
 pub mod deps;
 pub use run::*;
@@ -22,3 +23,4 @@ pub use jar::*;
 pub use javadoc::*;
 pub use health::*;
 pub use jpackage::*;
+pub use publish::*;
