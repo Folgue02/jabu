@@ -4,7 +4,7 @@ version = "0.8.0"
 edition = "2021"
 
 [dependencies]
-jaburepo = { path = "../jaburepo" }
+jaburepo = { path = "../jabu-repo" }
 jabu-config = { path = "../jabu-config" }
 built = { version = "0.7", features = ["chrono", "semver"] }
 chrono = "0.4.33"

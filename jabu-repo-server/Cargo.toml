@@ -4,7 +4,7 @@ version = "0.1.2"
 edition = "2021"
 
 [dependencies]
-jaburepo = { path = "../jaburepo" }
+jaburepo = { path = "../jabu-repo" }
 jabu-config = { path = "../jabu-config" }
 axum = { version = "0.7.5", features = ["multipart"] }
 log = "0.4.21"
