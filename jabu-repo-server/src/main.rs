@@ -38,7 +38,7 @@ async fn main() {
     let server_config: config::Config = config::CliArgs::parse().into();
     axum::serve(
         tcp_listener,
-        router::get_app_router(router::get_api_router(server_config.clone(), database.clone()), database),
+        router::get_app_router(router::AppState { config: server_config, database }),
     )
     .await
     .unwrap();

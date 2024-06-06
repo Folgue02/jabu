@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{model::error::ApiError, controller::artifacts};
+use crate::{controller::artifacts::{self, does_artifact_exist}, model::error::ApiError};
 
 use axum::{
     body::Body,
@@ -251,8 +251,25 @@ pub async fn upload_artifact(
     State(app_state): State<AppState>,
     mut multipart: Multipart,
 ) -> impl IntoResponse {
+    // TODO: Send functionality from this router 
+    // to the controller module.
     let spec = ArtifactSpec::new(author, artifact_id, version);
 
+    match does_artifact_exist(&spec, &app_state.database).await {
+        Ok(exists) => {
+            if exists {
+                let err_msg = format!("The specified artifact ('{spec}') already exists.");
+                log::warn!("{err_msg}");
+                ApiError::new(StatusCode::CONFLICT, err_msg);
+            }
+        }
+        Err(e) => {
+            log::info!("Attempt to upload artifact {spec} with wrong uuid key!");
+            return ApiError::from(e).into_response()
+        }
+    }
+
+    // Verify credentials
     match check_uuid_author(&spec.author, uuid_author_key, &app_state.database).await {
         Ok(exists) => {
             if !exists {

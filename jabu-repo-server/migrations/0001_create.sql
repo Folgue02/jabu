@@ -1,19 +1,19 @@
 
 CREATE TABLE IF NOT EXISTS authors (
-    author varchar,
-    uuid_key varchar,
-    creation_date timestamp WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    author varchar NOT NULL,
+    uuid_key varchar NOT NULL,
+    creation_date timestamp WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
 
     CONSTRAINT authors_pk
         PRIMARY KEY (author)
 );
 
 CREATE TABLE IF NOT EXISTS artifacts (
-    author varchar,
-    artifact_id varchar,
-    version varchar,
-    description varchar,
-    creation_date timestamp WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    author varchar NOT NULL,
+    artifact_id varchar NOT NULL,
+    version varchar NOT NULL,
+    description varchar NOT NULL,
+    creation_date timestamp WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
 
     CONSTRAINT artifacts_pk
         PRIMARY KEY (author, artifact_id, version),
@@ -24,10 +24,10 @@ CREATE TABLE IF NOT EXISTS artifacts (
 );
 
 CREATE TABLE IF NOT EXISTS artifact_tags (
-    author varchar,
-    artifact_id varchar,
-    version varchar,
-    tag varchar,
+    author varchar NOT NULL,
+    artifact_id varchar NOT NULL,
+    version varchar NOT NULL,
+    tag varchar NOT NULL,
     
     CONSTRAINT artifact_tags_fk
         FOREIGN KEY (author, artifact_id, version)

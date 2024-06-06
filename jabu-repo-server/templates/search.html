@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="/static/styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search {{ search_term }}</title>
+</head>
+<body>
+    <div class="container container-top-right" style="z-index:0;">
+        <div class="square black">
+            <div class="square">
+                <div class="square black">
+                    <div class="square">
+                        <div class="square black">
+                            <div class="square">
+                                <div class="square black">
+                                    <div class="square">
+                                        <div class="square black">
+                                            <div class="square">
+                                                <div class="square black">
+                                                    <div class="square">
+                                                        <div
+                                                            class="square black">
+                                                            <div
+                                                                class="square">
+                                                                <div
+                                                                    class="square black">
+                                                                    <div
+                                                                        class="square">
+                                                                        <div
+                                                                            class="square black">
+                                                                            <div
+                                                                                class="square">
+                                                                                <div
+                                                                                    class="square black">
+                                                                                    <div
+                                                                                        class="square">
+                                                                                        <div
+                                                                                            class="square black">
+                                                                                            <div
+                                                                                                class="square">
+                                                                                                <div
+                                                                                                    class="square black">
+                                                                                                    <div
+                                                                                                        class="square">
+                                                                                                        <div
+                                                                                                            class="square black">
+                                                                                                            <div
+                                                                                                                class="square">
+                                                                                                                <div
+                                                                                                                    class="square black">
+                                                                                                                    <div
+                                                                                                                        class="square">
+                                                                                                                        <div
+                                                                                                                            class="square black">
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="Homebutton">
+        <a href="./index">
+            <h6>Home</h6>
+        </a>
+    </div> 
+    <div class="result-field"><h5>Search Results</h5>
+    {% if results.len() == 0 -%}
+        <p>No results.<p>
+    {% else -%}
+        <p>{{ results.len() }} results.</p>
+        {% for row in results %}
+                <div class="result-unit" style="position:relative; top: 50%; left: 50%;z-index: 50;">
+                    <!--<img src="" class="result-img" style="border-radius: 8px;"></img>-->
+                    <div class="result-header"><h5>{{ row.spec.artifact_id }}</h5></div>
+                    <div class="result-description">{{ row.description }}</div>
+                        <p class="download-nr">126,377 Downloads <img src="./resources/sn9g2bhqbfoopvsqc5i26eo91a.png" alt="" class="downloadsymbol"></p>
+                </div>
+                <div class="download-unit">
+                    <a href="./j-unit.html"><button type="button" class="downloadbutton"><p>See Versions</p></button></a>
+
+                </div>
+            </div>
+        {% endfor %}
+    {% endif -%}
+    
+    <div id="footer">
+        <div class="Aboutus">
+            <a href="./about.html">
+                <h6>About</h6>
+            </a>
+        </div>
+
+        <div class="FAQ">
+            <a href="./FAQS.html">
+                <h6>FAQS</h6>
+            </a>
+        </div>
+
+        <div class="WIKI">
+            <a href>
+                <h6>Wiki</h6>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

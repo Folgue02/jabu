@@ -1,10 +1,12 @@
 use axum::{middleware::from_fn, routing::{get, post}, Router};
 use sqlx::{Pool, Postgres, PgPool};
+use tower_http::services::ServeDir;
 
 use crate::config::Config;
 
 pub mod api;
 pub mod middleware;
+pub mod templates;
 
 #[derive(Clone, Debug)]
 pub struct AppState {
@@ -13,15 +15,20 @@ pub struct AppState {
 }
 
 /// Generates the router with all the routes incorporated in it.
-pub fn get_app_router(api_router: Router, _: Pool<Postgres>) -> Router {
+pub fn get_app_router(app_state: AppState) -> Router {
+    let api_router = get_api_router(app_state.config.clone(), app_state.database.clone());
     Router::new()
+        .route("/index", get(templates::index))
+        .route("/search", get(templates::search))
+        .with_state(app_state)
         .nest("/api", api_router)
         .fallback(api::api_fallback)
+        .nest_service("/static/", ServeDir::new("./static"))
         .layer(from_fn(middleware::logging_middleware))
 }
 
 
-/// Router related to the API
+/// Router containing the API routes.
 pub fn get_api_router(server_config: Config, database: PgPool) -> Router {
     Router::new()
         .route(

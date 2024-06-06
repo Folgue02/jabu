@@ -3,6 +3,7 @@ use crate::{
         options::{Options, ParOptionBuilder},
         parser::ParsedArguments,
     },
+    dslapi::config::ProjectConfig,
     tasks::JabuTask,
 };
 use jabu_config::model::JabuProject;
@@ -50,6 +51,15 @@ impl JabuTask for ScriptsTask {
                         wrap_pyfunction!(crate::dslapi::prelude::get_version, jabu_module).unwrap(),
                     )
                     .unwrap();
+
+                jabu_module
+                    .setattr(
+                        "project_cfg",
+                        ProjectConfig::from(jabu_config.clone()).into_py(py),
+                    )
+                    .unwrap();
+
+                jabu_module.add_class::<ProjectConfig>().unwrap();
 
                 let sys_module = PyModule::import(py, "sys").unwrap();
                 let modules: &pyo3::types::PyDict =
