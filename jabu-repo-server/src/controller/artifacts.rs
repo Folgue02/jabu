@@ -1,3 +1,4 @@
+use askama_axum::IntoResponse;
 use chrono::{DateTime, Utc};
 use jabu_config::model::ArtifactSpec;
 use serde::Deserialize;
@@ -36,7 +37,7 @@ pub async fn does_artifact_exist(
     let query_results = sqlx::query(
         "SELECT COUNT(*) AS count
                 FROM artifacts
-                WHERE author = $1 AND artifact_id = $2 version = $3;",
+                WHERE author = $1 AND artifact_id = $2 AND version = $3;",
     )
     .bind(&spec.author)
     .bind(&spec.artifact_id)
@@ -89,31 +90,112 @@ impl FromRow<'_, PgRow> for ArtifactsRow {
     }
 }
 
+#[derive(Deserialize)]
+pub struct GeneralizedArtifactInfo {
+    pub search_term: String,
+    pub author: String,
+    pub artifact_id: String,
+    pub latest_version: String,
+    pub description: String,
+    pub first_date: chrono::DateTime<Utc>,
+    pub latest_date: chrono::DateTime<Utc>,
+}
+
 /// Returns a vector containing all the artifacts whose `artifact_id` start with
 /// the given `search_term`.
 pub async fn search_artifacts(
     search_term: impl AsRef<str>,
     database: &Pool<Postgres>,
-) -> sqlx::Result<Vec<ArtifactsRow>> {
+) -> sqlx::Result<Vec<GeneralizedArtifactInfo>> {
     let search_term = format!("{}%", search_term.as_ref());
     let query_results = sqlx::query!(
         r#"
-        SELECT author, artifact_id, version, description, creation_date
-        FROM artifacts
-        WHERE artifact_id LIKE $1
+        select author, artifact_id, min(description) as description, max(creation_date) as latest_date, min(creation_date) as first_date, max(version) as latest_version
+        from artifacts
+        where artifact_id like $1 
+        group by author, artifact_id
         "#,
-        search_term
+        &search_term
     )
     .fetch_all(database)
     .await?;
 
-    let artifacts: Vec<ArtifactsRow> = query_results.into_iter().map(|row| {
-        ArtifactsRow {
+    let artifacts: Vec<GeneralizedArtifactInfo> = query_results
+        .into_iter()
+        .map(|row| GeneralizedArtifactInfo {
+            search_term: search_term.clone(),
+            author: row.author,
+            artifact_id: row.artifact_id,
+            latest_version: row.latest_version.unwrap_or_default(),
+            description: row.description.unwrap_or_default(),
+            latest_date: row.latest_date.unwrap_or_default(),
+            first_date: row.first_date.unwrap_or_default(),
+        })
+        .collect();
+
+    Ok(artifacts)
+}
+
+/// Fetches all the versions of a given artifact spec. The version in the `spec` gets
+/// ignored.
+pub async fn all_artifact_versions(
+    spec: &ArtifactSpec,
+    database: &Pool<Postgres>,
+) -> sqlx::Result<Vec<ArtifactsRow>> {
+    let versions = sqlx::query!(
+        r#"
+        SELECT author, artifact_id, version, description, creation_date
+        FROM artifacts
+        WHERE author = $1 AND artifact_id = $2
+        "#,
+        spec.author,
+        spec.artifact_id
+    )
+    .fetch_all(database)
+    .await?;
+
+    let versions: Vec<ArtifactsRow> = versions
+        .into_iter()
+        .map(|row| ArtifactsRow {
             spec: ArtifactSpec::new(row.author, row.artifact_id, row.version),
             description: row.description,
             creation_date: row.creation_date,
-        }
-    }).collect();
+        })
+        .collect();
 
-    Ok(artifacts)
+    Ok(versions)
+}
+
+pub async fn first_latest_release_date(
+    spec: &ArtifactSpec,
+    database: &Pool<Postgres>,
+) -> sqlx::Result<(chrono::DateTime<Utc>, chrono::DateTime<Utc>)> {
+    log::info!("Spec: {spec}");
+    let result = sqlx::query!(
+        r#"
+        SELECT 
+            (SELECT creation_date
+            FROM   artifacts
+            WHERE  author = $1 
+                   AND artifact_id = $2
+            ORDER BY creation_date DESC LIMIT 1) AS first_date,
+           (SELECT creation_date
+            FROM   artifacts
+            WHERE  author = $1 
+                   AND artifact_id = $2
+             ORDER BY creation_date LIMIT 1) AS last_date
+    "#,
+        spec.author,
+        spec.artifact_id
+    )
+    .fetch_one(database)
+    .await?;
+
+    match (result.first_date, result.last_date) {
+        (Some(first_date), Some(last_date)) => Ok((first_date, last_date)),
+        _ => Err(sqlx::Error::ColumnNotFound(format!(
+            "No dates for artifact {}_{}: {result:?}",
+            spec.author, spec.artifact_id
+        ))),
+    }
 }

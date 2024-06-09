@@ -18,8 +18,9 @@ pub struct AppState {
 pub fn get_app_router(app_state: AppState) -> Router {
     let api_router = get_api_router(app_state.config.clone(), app_state.database.clone());
     Router::new()
-        .route("/index", get(templates::index))
-        .route("/search", get(templates::search))
+        .route("/index.html", get(templates::index))
+        .route("/search.html", get(templates::search))
+        .route("/artifact.html", get(templates::artifact))
         .with_state(app_state)
         .nest("/api", api_router)
         .fallback(api::api_fallback)

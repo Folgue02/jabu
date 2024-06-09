@@ -1,0 +1,94 @@
+@import url("/static/styles/base.css");
+
+h1 {
+    background-color: var(--main-color);
+}
+
+div.main-container {
+    display: flex;
+    flex-direction: row;
+    width: 100vw;
+    margin-top: 50px;
+}
+
+div.main-container div.padding {
+    flex: 1;
+}
+
+div.search-results-container {
+    font-family: "Play", sans-serif;
+    width: 800px;
+    color: white;
+}
+
+div.search-results-container div.search-result {
+    border: 1px solid white;
+    padding-inline: 10px;
+    border-radius: 5px;
+    transition: background-color .15s;
+    margin-bottom: 20px;
+}
+
+div.search-results-container div.search-header {
+    display: flex;
+    flex-direction: row;
+}
+
+div.search-results-container div.search-header input[type=text] {
+    width: 100%;
+    padding-inline: 10px;
+    padding-block: 5px;
+    margin-right: 0;
+    border-radius: 8px;
+}
+
+div.search-header input, textarea {
+    font-family: "Play", sans-serif;
+    background: linear-gradient(45deg, #202124, rgb(167, 52, 52));
+    color: white;
+    font-size: 17px;
+    margin-top: 0;
+}
+
+div.search-results-container hr {
+    border: 1.5px solid darkslategray;
+    margin-top: 15px;
+    margin-bottom: 35px;
+}
+
+div.search-header button {
+     background-color: var(--background-color);
+     border: none;
+     color: white;
+     border-radius: 5px;
+     transition: background-color .5s;
+     cursor: pointer;
+}
+
+div.search-header button:hover {
+    background-color: rgb(100, 43, 44);
+}
+
+div.search-result:hover {
+    background: linear-gradient(45deg, #202124, rgb(167, 52, 52));
+}
+
+div.search-result h3 {
+    display: inline;
+    cursor: pointer;
+}
+
+div.search-result h3 > a {
+    text-decoration: none;
+    color: white;
+}
+
+div.search-result h3 > a:hover {
+    text-decoration: underline;
+    color: white;
+}
+
+div.search-result p {
+    width: 60%;
+    min-width: 200px;
+}

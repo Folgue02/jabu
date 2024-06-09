@@ -1,0 +1,72 @@
+@import url('/static/styles/base.css');
+
+div.main-container {
+    display: flex;
+    width: 100vw;
+    height: 100%;
+    z-index: 1;
+}
+
+div.main-container div.padding {
+    width: 400px;
+}
+
+div.main-container div.content-container {
+    flex: 1;
+    margin: auto;
+    text-align: center;
+
+    font-family: "Jersey 10", sans-serif;
+    color: var(--main-color);
+}
+
+div.main-container > div.content-container > h1 {
+    font-size: 70px;
+    margin-bottom: 0px;
+}
+
+div.main-container > div.content-container > h2 {
+    margin-top: 0;
+    font-size: 40px;
+    margin-bottom: 5px;
+}
+
+div.main-container > div.content-container > div.searchbar-container > input[type=text] {
+    width: 250px;
+    padding-inline: 10px;
+    padding-block: 5px;
+    margin-right: 0;
+    border-radius: 8px;
+}
+
+div.main-container > div.content-container > div.searchbar-container > input, textarea {
+    font-family: "Play", sans-serif;
+    background: linear-gradient(45deg, #202124, rgb(167, 52, 52));
+    color: white;
+    font-size: 17px;
+    margin-top: 0;
+}
+
+div.main-container > div.content-container > div.searchbar-container > button {
+    padding-inline: 10px;
+    padding-block: 7px;
+    background-color: var(--background-color);
+    color: white;
+    border: none;
+    font-size: 15px;
+    border-radius: 6px;
+    font-family: "Play", sans-serif;
+
+    margin-left: 0;
+    transition: .5s background-color;
+    cursor: pointer;
+}
+
+div.main-container > div.content-container > div.searchbar-container > button:hover {
+    background-color: var(--main-color);
+}
+
+div.main-container > div.content-container > div.searchbar-container >  p {
+    font-family: "Play", sans-serif;
+    color: gray;
+}

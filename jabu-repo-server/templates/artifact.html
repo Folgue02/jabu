@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>JRR :: Artifact View</title>
+        <link rel="stylesheet" href="/static/styles/artifact.css"/>
+    </head>
+    <body>
+        <header>
+            <a href="/index.html">Home</a>
+        </header>
+
+        <main>
+            <div class="padding"></div>
+            <div class="main-container">
+                <div class="search-header">
+                    <input type="text" placeholder="Search..." id="searchbar"/>
+                    <button onclick="redirectToSearch(event)">Search</button>
+                </div>
+
+
+                {% if let Some(first) = versions.first() %}
+                    <div class="artifact-body">
+                        <h2>{{ first.spec.artifact_id }}</h2>
+                        <hr/>
+                        <div class="artifact-details">
+                            <div>
+                                <p>Author</p>
+                            </div>
+                            <div>
+                                <p>{{ first.spec.author }}</p>
+                            </div>
+
+                            <div>
+                                <p>Description</p>
+                            </div>
+                            <div>
+                                <p>{{ first.description }}</p>
+                            </div>
+
+                            <div>
+                                <p>Tags</p>
+                            </div>
+                            <div>
+                                {% if tags.is_empty() %}
+                                    <p><i>This artifact doesn't contain tags.</i></p>
+                                {% else %}
+                                    {% for tag in tags %}
+                                        <p>{{ tag }}</p>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+
+                            <div>
+                                <p>First release date</p>
+                            </div>
+                            <div>
+                                <p>{{ first_release_date }}</p>
+                            </div>
+
+                            <div>
+                                <p>Latest release</p>
+                            </div>
+                            <div>
+                                <p>{{ latest_release_date }}</p>
+                            </div>
+                        </div>
+
+                        <h2 class="versions">Versions</h2>
+                        <hr/>
+
+                        <div class="artifact-details">
+                            {% for artifact_row in versions %}
+                            <div>
+                                <p>{{ artifact_row.spec.version}} <br/><i>({{ artifact_row.creation_date}})</i></p>
+                            </div>
+                            <div>
+                                <p class="mono">{{ artifact_row.spec.author }}_{{ artifact_row.spec.artifact_id }}_{{ artifact_row.spec.version }}</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                {% else %}
+                    <p>The specified artifact doesn't exist. Go to the <a href="/index.html">home page</a>.</p>
+            {% endif %}
+        </div>
+        <div class="padding"></div>
+
+        </main>
+
+        <footer>
+            <div class="section">
+                <a href="/about.html">About</a>
+            </div>
+            <div class="section">
+                <a href="/faqs.html">FAQs</a>
+            </div>
+            <div class="section">
+                <a href="/wiki.html">Wiki</a>
+            </div>
+        </footer>
+    <div class="rose-container rose-container-top-left">
+<div class="square black">
+<div class="square">
+<div class="square black">
+<div class="square">
+<div class="square black">
+<div class="square">
+<div class="square black">
+<div class="square">
+<div class="square black">
+<div class="square">
+<div class="square black">
+<div class="square">
+<div class="square black">
+<div class="square">
+<div class="square black">
+<div class="square">
+<div class="square black">
+<div class="square">
+<div class="square black">
+<div class="square">
+<div class="square black">
+<div class="square">
+<div class="square black">
+<div class="square">
+<div class="square black">
+<div class="square">
+<div class="square black">
+<div class="square">
+<div class="square black">
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+        <script src="/static/scripts/index.js"></script>
+    </body>
+</html>
+

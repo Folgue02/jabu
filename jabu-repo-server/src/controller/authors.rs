@@ -6,15 +6,19 @@ pub async fn check_uuid_author(
     uuid: impl Into<String>,
     database: &Pool<Postgres>,
 ) -> sqlx::Result<bool> {
+    let author = author.into();
+    let uuid = uuid.into();
     let query_result = sqlx::query(
-        "SELECT COUNT(*) AS count
+        "SELECT COUNT(*) AS existence
         FROM authors 
         WHERE author = $1 AND uuid_key = $2",
     )
-    .bind(author.into())
-    .bind(uuid.into())
+    .bind(&author)
+    .bind(&uuid)
     .fetch_one(database)
     .await?;
 
-    Ok(query_result.get::<i64, _>("count") == 1)
+    let count = query_result.get::<i64, _>("existence");
+    log::info!("Checking uuid {uuid} from author {author}");
+    Ok(count == 1)
 }

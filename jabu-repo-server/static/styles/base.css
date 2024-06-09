@@ -1,0 +1,171 @@
+@import url('https://fonts.googleapis.com/css2?family=Jersey+10&family=Play:wght@400;700&display=swap');
+
+/* Spinning rose */
+
+div.rose-container{
+  height: 80vw;
+  width: 80vw;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  /*margin: -150px 0 0 -150px;*/
+  z-index: -1;
+  pointer-events: none;
+}
+
+.square{
+  height: 94%;
+  width: 94%;
+  background: var(--background-color);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: -47% 0 0 -47%;
+}
+
+.black{ 
+  background: #111111;  
+  animation: rotate 100s infinite linear; 
+}
+
+@keyframes rotate{
+  0%{ transform: rotate(0deg); }
+	100%{ transform: rotate(360deg); }	
+}
+
+
+.rose-container-top-right {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation: animation-top-right 4s cubic-bezier(0.075, 0.82, 0.165, 1) forwards;
+}
+
+@keyframes animation-top-right {
+    0% {
+        top: 50%;
+        left: 50%;
+    }
+
+    100% {
+        top: 10%;
+        left: 100%;
+    }
+}
+
+.rose-container-bottom-left {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation: animation-bottom-left 4s cubic-bezier(0.075, 0.82, 0.165, 1) forwards;
+    z-index: -20;
+}
+
+@keyframes animation-bottom-left {
+    0% {
+        top: 50%;
+        left: 50%;
+    }
+
+    100% {
+        top: 90%;
+        left: 90%;
+    }
+}
+
+.rose-container-top-left {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation: animation-top-left 4s cubic-bezier(0.075, 0.82, 0.165, 1) forwards;
+}
+
+@keyframes animation-top-left {
+    0% {
+        top: 50%;
+        left: 50%;
+    }
+
+    100% {
+        top: 10%;
+        left: 10%;
+    }
+}
+
+/* End of Spinning rose */
+
+
+:root {
+    --main-color: #b10303;
+    --background-color: #202124;
+    --main-font: "Play" sans-serif;
+}
+
+html {
+    height: 100%;
+}
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: var(--background-color);
+}
+
+header {
+    width: 100%;
+    margin: 0;
+    height: 100px;
+    top: 0;
+}
+
+header a {
+    text-decoration: none;
+    font-family: "Jersey 10", sans-serif;
+    font-size: 50px;
+    margin-left: 20px;
+    color: var(--main-color);
+}
+
+main {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+}
+
+div.padding {
+    flex: 1;
+}
+
+main div.main-container {
+    width: 800px;
+    color: white;
+    font-family: "Play", sans-serif;
+}
+
+footer {
+    display: flex;
+    flex-direction: row;
+    position: fixed;
+    padding-inline: 20px;
+    bottom: 0;
+    width: 100vw;
+    /* Change */
+    background-color: #09090a;
+    color: var(--main-color);
+    box-sizing: border-box;
+}
+
+footer div.section {
+    margin-top: 20px;
+    width: 200px;
+    height: 50px;
+}
+
+footer a {
+    font-family: "Jersey 10", sans-serif;
+    font-size: 35px;
+    color: var(--main-color);
+    text-decoration: none;
+}
+

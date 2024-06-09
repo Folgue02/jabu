@@ -1,40 +1,102 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
-    <head>
-        <link rel="icon" href="./resources/image_2024-05-11_171505634.ico">
-        <link rel="stylesheet" href="/static/styles.css">
-        <title>Jabu Remote Repository</title>
-    </head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/styles/index.css">
+    <title>Homepage</title>
+</head>
 
-    <body>
-        <div class="homepage-main-container">
+<body>
+    <div class="main-container">
+        <div class="padding"></div>
+        <div class="content-container">
             <h1>JRR</h1>
             <h2>Jabu Remote Repository</h2>
-            <input type="text" placeholder="Search..."/>
-            <button>Search</button>
-        </div>
-        <p>Current artifacts: {{ artifact_count }}</p>
-
-        <div id="footer">
-            <div class="Aboutus">
-                <a href="./about.html">
-                    <h6>About</h6>
-                </a>
-            </div>
-
-            <div class="FAQ">
-                <a href="./FAQS.html">
-                    <h6>FAQS</h6>
-                </a>
-            </div>
-
-            <div class="WIKI">
-                <a href>
-                    <h6>Wiki</h6>
-                </a>
+            <div class="searchbar-container">
+                <input type="text" placeholder="Search..." id="searchbar" />
+                <button onclick="redirectToSearch();" id="search-button">Search</button>
+                <p>Artifacts stored: {{ artifact_count }}</p>
             </div>
         </div>
-    </body>
+        <div class="padding"></div>
+    </div>
+
+    <footer>
+        <div class="section">
+            <a href="/about.html">About</a>
+        </div>
+        <div class="section">
+            <a href="/faqs.html">FAQs</a>
+        </div>
+        <div class="section">
+            <a href="/wiki.html">Wiki</a>
+        </div>
+    </footer>
+
+        <div class="rose-container">
+<div class="square black">
+<div class="square">
+<div class="square black">
+<div class="square">
+<div class="square black">
+<div class="square">
+<div class="square black">
+<div class="square">
+<div class="square black">
+<div class="square">
+<div class="square black">
+<div class="square">
+<div class="square black">
+<div class="square">
+<div class="square black">
+<div class="square">
+<div class="square black">
+<div class="square">
+<div class="square black">
+<div class="square">
+<div class="square black">
+<div class="square">
+<div class="square black">
+<div class="square">
+<div class="square black">
+<div class="square">
+<div class="square black">
+<div class="square">
+<div class="square black">
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+    <script src="/static/scripts/index.js"></script>
+</body>
 
 </html>

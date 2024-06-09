@@ -1,0 +1,36 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+use feature 'say';
+
+use File::Spec::Functions qw(catfile);
+use File::Basename;
+
+my @SAMPLE_ARTIFACTS = (
+    "daniel artifact 1.0.0",
+    "daniel artifact 1.2.0",
+    "daniel artifact 1.5.0",
+
+    "mark registry 1.0.0",
+    "mark something 1.2.0",
+    "mark jhonson 1.5.0",
+
+    "rhon registration 1.0.0",
+
+    "rhan installer 1.2.0",
+    "rhan installer 1.4.0",
+    "rhan installer 1.5.0",
+    "rhan installer 1.5.3",
+    "rhan artifact 1.5.0",
+    "rhan artifact 1.0.0",
+);
+
+my $create_artifact_script = catfile dirname($0), "create-artifact";
+say "Using $create_artifact_script as main script.";
+
+for my $artifact (@SAMPLE_ARTIFACTS) {
+    say "=====> Populating with artifact '$artifact'";
+    my $cmd = "$create_artifact_script $artifact";
+    say "Using cmd: $cmd";
+    system("$cmd") == 0 or die "$create_artifact_script didn't exit with '0'";
+}

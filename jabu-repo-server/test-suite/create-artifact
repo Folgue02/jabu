@@ -5,8 +5,8 @@ use warnings;
 use File::Spec::Functions;
 use File::Basename;
 
-my $author = $ARGV[0] // "artifact";
-my $artifact_id = $ARGV[1] // "daniel";
+my $author = $ARGV[0] // "someone";
+my $artifact_id = $ARGV[1] // "artifact";
 my $version = $ARGV[2] // "1.0.0";
 
 
