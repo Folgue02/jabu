@@ -26,4 +26,11 @@ sub initialize_repo {
 pprint "Initializing repo...";
 my $tmp_dir = initialize_repo;
 pprint "Starting server...";
-system("RUSTFLAGS=-Awarnings cargo r -q -- --repo-path $tmp_dir --port $PORT") == 0 or die "The server has exited with code '$?'.";
+my $cargo_cmd = "cargo r -q -- --repo-path $tmp_dir --port $PORT";
+
+if ($^O eq "Linux") {
+    system("RUSTFLAGS=-Awarnings $cargo_cmd") == 0 or die "The server has exited with code '$?'.";
+} else {
+    $ENV{RUSTFLAGS} = "-Awarnings";
+    system("$cargo_cmd") == 0 or die "The server has exited with code '$?'.";
+}
