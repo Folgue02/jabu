@@ -41,7 +41,7 @@ impl ToString for JarManifest {
             .iter()
             .map(|(k, v)| format!("{k}: {v}"))
             .collect::<Vec<String>>()
-            .join("\n")
+            .join("\n") + "\n"
     }
 }
 
