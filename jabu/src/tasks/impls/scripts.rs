@@ -7,7 +7,8 @@ use crate::{
     tasks::JabuTask,
 };
 use jabu_config::model::JabuProject;
-use pyo3::prelude::*;
+use rhai::{packages::Package, Engine, EvalAltResult, Scope};
+use rhai_fs::FilesystemPackage;
 use std::{
     collections::HashMap,
     path::{Path, PathBuf},
@@ -38,63 +39,13 @@ impl JabuTask for ScriptsTask {
                 "You didn't specify any scripts to be executed.".to_string(),
             ))
         } else {
-            pyo3::prepare_freethreaded_python();
-            Python::with_gil(|py| {
-                let jabu_module = PyModule::new(py, "jabu").unwrap();
-                jabu_module
-                    .add_function(
-                        wrap_pyfunction!(crate::dslapi::prelude::print, jabu_module).unwrap(),
-                    )
-                    .unwrap();
-                jabu_module
-                    .add_function(
-                        wrap_pyfunction!(crate::dslapi::prelude::get_version, jabu_module).unwrap(),
-                    )
-                    .unwrap();
-
-                jabu_module
-                    .setattr(
-                        "project_cfg",
-                        ProjectConfig::from(jabu_config.clone()).into_py(py),
-                    )
-                    .unwrap();
-
-                jabu_module.add_class::<ProjectConfig>().unwrap();
-
-                let sys_module = PyModule::import(py, "sys").unwrap();
-                let modules: &pyo3::types::PyDict =
-                    sys_module.getattr("modules").unwrap().downcast().unwrap();
-
-                modules
-                    .set_item("jabu", jabu_module)
-                    .expect("Couldn't create Rust bindings for pyo3.");
-
-                // Try to execute each script, and store the results
-                // indexed by the script name.
-                for script_name in parsed_arguments.arg_list {
-                    let script_content = match ScriptsTask::read_script(jabu_config, &script_name) {
-                        Ok(script_content) => script_content,
-                        Err(e) => {
-                            results.insert(script_name, PyScriptExecutionResult::IOError(e));
-                            continue;
-                        }
-                    };
-
-                    println!("====> Executing script '{script_name}'");
-                    // TODO: Create an enum and store the results
-                    // per enum variant? i.e. IOError, RuntimeError & Success?
-                    match py.run(&script_content, None, None) {
-                        Ok(_) => {
-                            results.insert(script_name.clone(), PyScriptExecutionResult::Success(0))
-                        }
-                        Err(e) => results.insert(
-                            script_name.clone(),
-                            PyScriptExecutionResult::RuntimeError(e),
-                        ),
-                    };
-                    println!("====> Script '{}' done.", &script_name);
-                }
+            parsed_arguments.arg_list.iter().for_each(|script_name| {
+                let script_path = Self::get_script_path(jabu_config, script_name);
+                results.insert(script_name, Self::run_script(jabu_config, script_path));
             });
+            
+            // Indicates if any of the scripts have returned
+            // an error.
             let mut errors = false;
 
             // Print script execution results and check if all scripts
@@ -104,20 +55,29 @@ impl JabuTask for ScriptsTask {
                 .enumerate()
                 .for_each(|(index, (script_name, script_result))| {
                     let index = index + 1;
+                    let msg_prefix = format!("[{index}#{script_name}]:");
+
                     match script_result {
-                        PyScriptExecutionResult::RuntimeError(e) => {
-                            let msg = format!("Runtime error: {e}");
-                            eprintln!("[{index}#{script_name}]: {msg}");
+                        Ok(_) => println!("{msg_prefix} Done."),
+                        Err(e) => {
                             errors = true;
-                        }
-                        PyScriptExecutionResult::IOError(e) => {
-                            let msg = format!("Couldn't read : {e}");
-                            eprintln!("[{index}#{script_name}]: {msg}");
-                            errors = true;
-                        }
-                        PyScriptExecutionResult::Success(time) => {
-                            let msg = format!("Took {time}ms");
-                            println!("[{index}#{script_name}]: {msg}");
+                            match e.unwrap_inner() {
+                                EvalAltResult::Return(_, _) | EvalAltResult::Exit(_, _) => {
+                                    // Everything went ok.
+                                    println!("{msg_prefix} Done.");
+                                }
+                                EvalAltResult::ErrorParsing(e_type, pos) => {
+                                    eprintln!("{msg_prefix} Parsing error at position: {pos}");
+                                    eprintln!("{msg_prefix} Error type: {e_type}");
+                                }
+                                EvalAltResult::ErrorSystem(msg, internal_error) => {
+                                    eprintln!("{msg_prefix} System error: {msg}");
+                                    eprintln!("{msg_prefix} Internal error: {internal_error}");
+                                }
+                                _ => {
+                                    eprintln!("{msg_prefix} Error while executing the script: {e}");
+                                }
+                            }
                         }
                     }
                 });
@@ -153,17 +113,27 @@ impl JabuTask for ScriptsTask {
 impl ScriptsTask {
     /// Returns the contents of the given script as a string. The script_name
     /// is not supposed to be the path to the script, instead, it is its *middle name*,
-    /// meaning that if there is a script in `scripts/my_script.py`, this script's name
+    /// meaning that if there is a script in `scripts/my_script.rhai`, this script's name
     /// would be `my_script`.
     fn read_script(jabu_config: &JabuProject, script_name: &str) -> std::io::Result<String> {
         std::fs::read_to_string(
-            Path::new(&jabu_config.fs_schema.scripts).join(format!("{script_name}.py")),
+            Path::new(&jabu_config.fs_schema.scripts).join(format!("{script_name}.rhai")),
         )
     }
 
+    /// Returns the path to the script referred to by the script name.
+    ///
+    /// # See
+    /// [`Self::read_script`]
+    fn get_script_path(jabu_config: &JabuProject, script_name: impl AsRef<str>) -> PathBuf {
+        let script_name = script_name.as_ref();
+        PathBuf::from(&jabu_config.fs_schema.scripts).join(format!("{script_name}.rhai"))
+    }
+
     /// Returns all the paths to available scripts in the scripts folder.
-    /// **If the scripts folder cannot be read, this function will return an
-    /// empty Vec**.
+    /// # Note 
+    /// If the scripts folder cannot be read, this function will return an
+    /// empty Vec.
     fn get_scripts(jabu_config: &JabuProject) -> Vec<PathBuf> {
         walkdir::WalkDir::new(&jabu_config.fs_schema.scripts)
             .into_iter()
@@ -173,23 +143,61 @@ impl ScriptsTask {
             })
             .filter(|e| e.file_type().is_file())
             .map(|e| e.path().to_path_buf())
-            .filter(|e| e.extension().unwrap_or_default() == "py")
+            .filter(|e| e.extension().unwrap_or_default() == "rhai")
             .collect::<Vec<PathBuf>>()
     }
+
+    /// Runs the script located at `path_to_script`, and returns the result of the execution.
+    ///
+    /// This function already does the binding of the DSL for the engine.
+    fn run_script(
+        jabu_config: &JabuProject,
+        path_to_script: PathBuf,
+    ) -> Result<(), Box<EvalAltResult>> {
+        let proj_cfg = ProjectConfig::new(jabu_config.clone(), std::env::current_dir().unwrap());
+        let fs_package = FilesystemPackage::new();
+        let mut engine = Engine::new();
+        let mut scope = Scope::new();
+
+        // Register types 
+        engine.build_type::<ProjectConfig>();
+        engine.build_type::<Person>();
+
+        // Register the filesystem package.
+        fs_package.register_into_engine(&mut engine);
+
+        // Bind the project configuration and other constants.
+        scope.push("proj_cfg", proj_cfg);
+        scope.push_constant("VERSION", crate::VERSION);
+
+        engine.run_file_with_scope(&mut scope, path_to_script)
+    }
+}
+use rhai::{CustomType, TypeBuilder};
+
+#[derive(Debug, Clone, CustomType)]
+#[rhai_type(extra = Self::build_extra)]
+pub struct Person {
+    pub name: String,
+    pub age: i32
 }
 
-enum PyScriptExecutionResult {
-    IOError(std::io::Error),
-    RuntimeError(PyErr),
-    Success(i32),
-}
+impl Person {
+    pub fn build_extra(builder: &mut TypeBuilder<Self>) {
+        builder
+            .with_name("Person")
+            .with_fn("new_ps", Self::new)
+            .with_fn("to_string", Self::to_string);
+    }
 
-impl PyScriptExecutionResult {
-    /// Checks if the result represents an error.
-    pub fn is_error(&self) -> bool {
-        match self {
-            Self::IOError(_) | Self::RuntimeError(_) => true,
-            _ => false,
+    pub fn to_string(&mut self) -> String {
+        format!("Name: {}, Age: {}", self.name, self.age)
+    }
+
+    pub fn new(name: String, age: i32) -> Self {
+        Self {
+            name, 
+            age
         }
     }
 }
