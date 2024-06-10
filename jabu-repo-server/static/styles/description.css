@@ -1,0 +1,28 @@
+@import url('/static/styles/base.css');
+
+html, body {
+    overflow: hidden;
+}
+
+div.main-container {
+    display: flex;
+    flex-direction: row;
+    height: 100vh;
+}
+
+div.main-container div.padding {
+    height: 100vh;
+    flex: 1;
+}
+
+div.main-container div.content {
+    height: 40vh;
+    width: 700px;
+    font-family: "Play", sans-serif;
+    padding-inline: 30px;
+    color: white;
+    margin-top: 25vh;
+    background-color: rgba(9, 9, 10, .95);
+    height: 100vh;
+    border-radius: 10px;
+}

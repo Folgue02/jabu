@@ -146,6 +146,7 @@ main div.main-container {
 footer {
     display: flex;
     flex-direction: row;
+    justify-content: flex-start;
     position: fixed;
     padding-inline: 20px;
     bottom: 0;
