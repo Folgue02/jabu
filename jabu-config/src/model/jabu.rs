@@ -83,6 +83,12 @@ impl ConfigHeader {
     }
 }
 
+impl std::fmt::Display for ConfigHeader {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}_{}_{}", self.author, self.project_name, self.version)
+    }
+}
+
 /// Configuration about the jdk to be used on the
 /// project.
 #[derive(Debug, PartialEq, Deserialize, Serialize, Clone)]

@@ -187,7 +187,7 @@ pub struct ProjectConfig {
 impl ProjectConfig {
     pub fn build_extra(builder: &mut TypeBuilder<Self>) {
         builder
-            .with_name("Person")
+            .with_name("ProjectConfig")
             .with_fn("lib_path", Self::lib_path)
             .with_fn("scripts_path", Self::scripts_path)
 
@@ -199,7 +199,13 @@ impl ProjectConfig {
             .with_fn("remote_dependencies", Self::remote_dependencies)
 
             .with_fn("source_path", Self::source_path)
+
+            .with_fn("artifact_ident", Self::artifact_identifier)
         ;
+    }
+
+    pub fn artifact_identifier(&mut self) -> String {
+        self.proj.header.to_string()
     }
 
     pub fn local_dependencies(&mut self) -> Array {
