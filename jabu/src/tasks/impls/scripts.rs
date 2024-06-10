@@ -3,11 +3,10 @@ use crate::{
         options::{Options, ParOptionBuilder},
         parser::ParsedArguments,
     },
-    dslapi::config::ProjectConfig,
     tasks::JabuTask,
 };
 use jabu_config::model::JabuProject;
-use rhai::{packages::Package, Engine, EvalAltResult, Scope};
+use rhai::{packages::Package, Array, Dynamic, Engine, EvalAltResult, Scope};
 use rhai_fs::FilesystemPackage;
 use std::{
     collections::HashMap,
@@ -43,7 +42,7 @@ impl JabuTask for ScriptsTask {
                 let script_path = Self::get_script_path(jabu_config, script_name);
                 results.insert(script_name, Self::run_script(jabu_config, script_path));
             });
-            
+
             // Indicates if any of the scripts have returned
             // an error.
             let mut errors = false;
@@ -131,7 +130,7 @@ impl ScriptsTask {
     }
 
     /// Returns all the paths to available scripts in the scripts folder.
-    /// # Note 
+    /// # Note
     /// If the scripts folder cannot be read, this function will return an
     /// empty Vec.
     fn get_scripts(jabu_config: &JabuProject) -> Vec<PathBuf> {
@@ -154,21 +153,25 @@ impl ScriptsTask {
         jabu_config: &JabuProject,
         path_to_script: PathBuf,
     ) -> Result<(), Box<EvalAltResult>> {
-        let proj_cfg = ProjectConfig::new(jabu_config.clone(), std::env::current_dir().unwrap());
+        //let proj_cfg = ProjectConfig::new(jabu_config.clone(), std::env::current_dir().unwrap());
         let fs_package = FilesystemPackage::new();
         let mut engine = Engine::new();
         let mut scope = Scope::new();
 
-        // Register types 
+        // Register types
         engine.build_type::<ProjectConfig>();
-        engine.build_type::<Person>();
 
         // Register the filesystem package.
         fs_package.register_into_engine(&mut engine);
 
         // Bind the project configuration and other constants.
-        scope.push("proj_cfg", proj_cfg);
         scope.push_constant("VERSION", crate::VERSION);
+        scope.push_constant(
+            "proj_cfg",
+            ProjectConfig {
+                proj: jabu_config.clone(),
+            },
+        );
 
         engine.run_file_with_scope(&mut scope, path_to_script)
     }
@@ -177,27 +180,66 @@ use rhai::{CustomType, TypeBuilder};
 
 #[derive(Debug, Clone, CustomType)]
 #[rhai_type(extra = Self::build_extra)]
-pub struct Person {
-    pub name: String,
-    pub age: i32
+pub struct ProjectConfig {
+    pub proj: JabuProject,
 }
 
-impl Person {
+impl ProjectConfig {
     pub fn build_extra(builder: &mut TypeBuilder<Self>) {
         builder
             .with_name("Person")
-            .with_fn("new_ps", Self::new)
-            .with_fn("to_string", Self::to_string);
+            .with_fn("lib_path", Self::lib_path)
+            .with_fn("scripts_path", Self::scripts_path)
+
+            .with_fn("target_path", Self::target_path)
+            .with_fn("target_docs_path", Self::target_docs_path)
+            .with_fn("target_bin_path", Self::target_bin_path)
+            .with_fn("target_self_contained_path", Self::target_self_contained_path)
+            .with_fn("local_dependencies", Self::local_dependencies)
+            .with_fn("remote_dependencies", Self::remote_dependencies)
+
+            .with_fn("source_path", Self::source_path)
+        ;
     }
 
-    pub fn to_string(&mut self) -> String {
-        format!("Name: {}, Age: {}", self.name, self.age)
+    pub fn local_dependencies(&mut self) -> Array {
+        self.proj.dependencies.local.iter()
+            .map(|dep| Dynamic::from(dep.to_string()))
+            .collect()
     }
 
-    pub fn new(name: String, age: i32) -> Self {
-        Self {
-            name, 
-            age
-        }
+    pub fn remote_dependencies(&mut self) -> Array {
+        self.proj.dependencies.remote.iter()
+            .map(|dep| Dynamic::from(dep.to_string()))
+            .collect()
+    }
+
+
+    pub fn source_path(&mut self) -> String {
+        self.proj.fs_schema.source.clone()
+    }
+
+    pub fn target_self_contained_path(&mut self) -> String {
+        self.proj.fs_schema.target_self_contained().to_string_lossy().to_string()
+    }
+
+    pub fn lib_path(&mut self) -> String {
+        self.proj.fs_schema.lib.clone()
+    }
+
+    pub fn scripts_path(&mut self) -> String {
+        self.proj.fs_schema.scripts.clone()
+    }
+
+    pub fn target_path(&mut self) -> String {
+        self.proj.fs_schema.target.clone()
+    }
+
+    pub fn target_bin_path(&mut self) -> String {
+        self.proj.fs_schema.target_bin().to_string_lossy().to_string()
+    }
+
+    pub fn target_docs_path(&mut self) -> String {
+        self.proj.fs_schema.target_docs().to_string_lossy().to_string()
     }
 }

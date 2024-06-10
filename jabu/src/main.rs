@@ -9,7 +9,6 @@ mod tasks;
 mod args;
 mod tools;
 mod utils;
-mod dslapi;
 
 #[cfg(test)]
 mod tests;
